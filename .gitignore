@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.cache
+.pytest_cache/
+venv/
+vyper/
