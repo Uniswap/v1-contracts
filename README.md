@@ -1,7 +1,7 @@
 ## How it works
 https://hackmd.io/Tlf08KuPTbqsHLKk5hzAvA
 
-## Installation:
+## Installation: (will be improved soon)
 
 #### Tested in macOS High Sierra
 
@@ -12,7 +12,7 @@ $ brew install python3
 $ brew install pkg-config autoconf automake libyaml
 ```
 
-2) Clone Uniswap and Vyper repositories
+2) Clone Uniswap repo
 ```
 $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
