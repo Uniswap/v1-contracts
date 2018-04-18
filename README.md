@@ -5,7 +5,7 @@ https://hackmd.io/Tlf08KuPTbqsHLKk5hzAvA
 
 #### Tested in macOS High Sierra
 
-1) Install python 3 and upgrade pip (requies [Homebrew](https://brew.sh/))
+1) Install python 3 and upgrade pip (requires [Homebrew](https://brew.sh/))
 ```
 $ xcode-select --install (if needed)
 $ brew install python3
