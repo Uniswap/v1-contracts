@@ -2,9 +2,9 @@ def test_tokens_to_tokens_swap(t, chain, utils, uni_token, swap_token, uniswap_f
     uni_token.transfer(t.a1, 2*10**18)
     uni_token.approve(uni_token_exchange.address, 10*10**18)
     uni_token.approve(uni_token_exchange.address, 2*10**18, sender=t.k1)
-    uni_token_exchange.initiate(uniswap_factory.address, uni_token.address, 10*10**18, value=5*10**18)
+    uni_token_exchange.initiate(10*10**18, value=5*10**18)
     swap_token.approve(swap_token_exchange.address, 20*10**18)
-    swap_token_exchange.initiate(uniswap_factory.address, swap_token.address, 20*10**18, value=5*10**18)
+    swap_token_exchange.initiate(20*10**18, value=5*10**18)
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18
@@ -36,9 +36,9 @@ def test_tokens_to_tokens_payment(t, chain, utils, uni_token, swap_token, uniswa
     uni_token.transfer(t.a1, 2*10**18)
     uni_token.approve(uni_token_exchange.address, 10*10**18)
     uni_token.approve(uni_token_exchange.address, 2*10**18, sender=t.k1)
-    uni_token_exchange.initiate(uniswap_factory.address, uni_token.address, 10*10**18, value=5*10**18)
+    uni_token_exchange.initiate(10*10**18, value=5*10**18)
     swap_token.approve(swap_token_exchange.address, 20*10**18)
-    swap_token_exchange.initiate(uniswap_factory.address, swap_token.address, 20*10**18, value=5*10**18)
+    swap_token_exchange.initiate(20*10**18, value=5*10**18)
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18
@@ -56,7 +56,7 @@ def test_tokens_to_tokens_payment(t, chain, utils, uni_token, swap_token, uniswa
     assert swap_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_token_exchange.tokens_to_tokens_payment(swap_token.address, t.a2, 2*10**18, startgas=300000, sender=t.k1)
+    uni_token_exchange.tokens_to_tokens_payment(swap_token.address, t.a2, 2*10**18, startgas=500000, sender=t.k1)
     # Updated balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 4168056018672890963
     assert uni_token_exchange.token_pool() == 12*10**18
