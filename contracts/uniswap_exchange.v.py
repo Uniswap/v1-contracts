@@ -72,6 +72,7 @@ def eth_to_tokens_payment(recipent: address, min_tokens: currency_value):
 # Exchange Tokens for ETH
 @private
 def tokens_to_eth(buyer: address, recipent: address, tokens_in: currency_value, min_eth: wei_value):
+    assert tokens_in > 0
     assert self.invariant > 0
     fee: currency_value = floor(tokens_in / 500)
     new_token_pool: currency_value = self.token_pool + tokens_in
@@ -111,6 +112,7 @@ def tokens_to_tokens_incoming(recipent: address) -> bool:
 # Sells tokens to the contract in exchange for other tokens
 @private
 def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tokens_in: currency_value, min_tokens: currency_value):
+    assert tokens_in > 0
     assert self.invariant > 0
     assert token_addr != self.token_address
     lookup_data: bytes[4096] = concat(method_id("token_to_exchange_lookup(address)"), convert(token_addr, 'bytes32'))
