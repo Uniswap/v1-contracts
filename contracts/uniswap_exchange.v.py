@@ -1,3 +1,7 @@
+# class Factory():
+#     def token_to_exchange_lookup(token_addr: address) -> address: pass
+#     def exchange_to_token_lookup(exchange_addr: address) -> address: pass
+
 EthToToken: event({buyer: indexed(address), eth_in: indexed(uint256), tokens_out: indexed(uint256)})
 TokenToEth: event({buyer: indexed(address), tokens_in: indexed(uint256), eth_out: indexed(uint256)})
 Investment: event({investor: indexed(address), eth_invested: indexed(uint256), tokens_invested: indexed(uint256)})
@@ -10,6 +14,13 @@ total_shares: public(uint256)
 token_address: address(ERC20)
 factory_address: public(address)
 shares: uint256[address]
+# factory: static(Factory)
+
+# # Called by factory during launch
+# @public
+# def create_factory(factory_addr: contract(Factory)) -> bool:
+#     factory: static(Factory) = factory_addr
+#     return True
 
 # Called by factory during launch
 @public
@@ -26,6 +37,7 @@ def initiate(token_amount: uint256):
     assert self.invariant == convert(0, 'uint256')
     assert self.total_shares == convert(0, 'uint256')
     assert self.factory_address != 0x0000000000000000000000000000000000000000
+    # self.create_factory(self.factory_address)
     eth_in: uint256 = convert(msg.value, 'uint256')
     assert uint256_ge(eth_in, convert(100000, 'uint256'))
     assert uint256_le(eth_in, convert(5*10**18, 'uint256'))
@@ -104,10 +116,10 @@ def tokens_to_eth_payment(recipent: address, tokens_in: uint256, min_eth: uint25
 # Can only be called by other uniswap exchange contracts in token to token trades
 @public
 @payable
-def tokens_to_tokens_incoming(recipent: address) -> bool:
+def tokens_to_tokens_incoming(recipent: address, min_tokens: uint256) -> bool:
     data: bytes[4096] = concat(method_id("exchange_to_token_lookup(address)"), convert(msg.sender, 'bytes32'))
     assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) != 0x0000000000000000000000000000000000000000
-    self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), convert(1, 'uint256')) # NEED TO PASS MIN VALUE
+    self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_tokens) # NEED TO PASS MIN VALUE
     return True
 
 # Sells tokens to the contract in exchange for other tokens
@@ -115,6 +127,7 @@ def tokens_to_tokens_incoming(recipent: address) -> bool:
 def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tokens_in: uint256, min_tokens: uint256):
     assert uint256_gt(self.invariant, convert(0, 'uint256'))
     assert uint256_gt(tokens_in, convert(0, 'uint256'))
+    assert uint256_gt(min_tokens, convert(0, 'uint256'))
     assert token_addr != self.token_address
     factory_data: bytes[4096] = concat(method_id("token_to_exchange_lookup(address)"), convert(token_addr, 'bytes32'))
     exchange: address = extract32(raw_call(self.factory_address, factory_data, gas=750, outsize=32), 0, type=address)
@@ -128,8 +141,8 @@ def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tok
     self.token_pool = new_token_pool
     self.invariant = uint256_mul(new_eth_pool, new_token_pool)
     self.token_address.transferFrom(buyer, self, tokens_in)
-    exchange_data: bytes[4096] = concat(method_id("tokens_to_tokens_incoming(address)"), convert(recipent, 'bytes32'))
-    assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_out, 'int128'), 'wei'), gas=75000, outsize=32), 0, type=bool) == True
+    exchange_data: bytes[4096] = concat(method_id("tokens_to_tokens_incoming(address,uint256)"), convert(recipent, 'bytes32'), convert(min_tokens, 'bytes32'))
+    assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_out, 'int128'), 'wei'), gas=100000, outsize=32), 0, type=bool) == True
     log.TokenToEth(buyer, tokens_in, eth_out)
 
 # Buyer sells tokens in exchange for ETH
@@ -146,11 +159,13 @@ def tokens_to_tokens_payment(token_addr: address, recipent: address, tokens_in: 
 
 @public
 @payable
-def invest():
+def invest(min_shares: uint256):
     assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(min_shares, convert(0, 'uint256'))
     assert msg.value > 0
     eth_invested: uint256 = convert(msg.value, 'uint256')
     shares_minted: uint256 = uint256_div(uint256_mul(eth_invested, self.total_shares), self.eth_pool)
+    assert uint256_gt(shares_minted, min_shares)
     tokens_invested: uint256 = uint256_div(uint256_mul(shares_minted, self.token_pool), self.total_shares)
     self.shares[msg.sender] = uint256_add(self.shares[msg.sender], shares_minted)
     self.total_shares = uint256_add(self.total_shares, shares_minted)
@@ -162,11 +177,15 @@ def invest():
 
 @public
 @payable
-def divest(shares_burned: uint256):
+def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256):
     assert uint256_gt(self.invariant, convert(0, 'uint256'))
     assert uint256_gt(shares_burned, convert(0, 'uint256'))
+    assert uint256_gt(min_eth, convert(0, 'uint256'))
+    assert uint256_gt(min_tokens, convert(0, 'uint256'))
     eth_divested: uint256 = uint256_div(uint256_mul(shares_burned, self.eth_pool), self.total_shares)
     tokens_divested: uint256 = uint256_div(uint256_mul(shares_burned, self.token_pool), self.total_shares)
+    assert uint256_gt(eth_divested, min_eth)
+    assert uint256_gt(tokens_divested, min_tokens)
     self.shares[msg.sender] = uint256_sub(self.shares[msg.sender], shares_burned)
     self.total_shares = uint256_sub(self.total_shares, shares_burned)
     self.eth_pool = uint256_sub(self.eth_pool, eth_divested)

@@ -17,12 +17,12 @@ def test_invest_divest(t, chain, utils, uni_token, uniswap_factory, uni_token_ex
     assert uni_token_exchange.get_shares(t.a0) == 1000
     assert uni_token_exchange.get_shares(t.a1) == 0
     assert uni_token.balanceOf(t.a1) == 10*10**18
-    uni_token_exchange.invest(value=5*10**18, sender=t.k1)
+    uni_token_exchange.invest(1, value=5*10**18, sender=t.k1)
     assert uni_token_exchange.total_shares() == 6000
     assert uni_token_exchange.get_shares(t.a0) == 1000
     assert uni_token_exchange.get_shares(t.a1) == 5000
     assert uni_token.balanceOf(t.a1) == 0
-    uni_token_exchange.divest(5000, sender=t.k1)
+    uni_token_exchange.divest(5000, 1, 1, sender=t.k1)
     assert uni_token_exchange.total_shares() == 1000
     assert uni_token_exchange.get_shares(t.a0) == 1000
     assert uni_token_exchange.get_shares(t.a1) == 0
