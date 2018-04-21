@@ -202,15 +202,15 @@ def uniswap_exchange(t, chain):
 @pytest.fixture
 def uni_token(t, chain):
     t.languages['vyper'] = compiler.Compiler()
-    contract_code = open(os.path.join(PAR_DIR, 'contracts/vypercoin.v.py')).read()
-    return chain.contract(contract_code, language='vyper', args=["UNI Token", "UNI", 18, 100000])
+    contract_code = open(os.path.join(PAR_DIR, 'contracts/ERC20.v.py')).read()
+    return chain.contract(contract_code, language='vyper', args=["UNI Token", "UNI", 18, 100000*10**18])
 
 
 @pytest.fixture
 def swap_token(t, chain):
     t.languages['vyper'] = compiler.Compiler()
-    contract_code = open(os.path.join(PAR_DIR, 'contracts/vypercoin.v.py')).read()
-    return chain.contract(contract_code, language='vyper', args=["SWAP Token", "SWAP", 18, 100000])
+    contract_code = open(os.path.join(PAR_DIR, 'contracts/ERC20.v.py')).read()
+    return chain.contract(contract_code, language='vyper', args=["SWAP Token", "SWAP", 18, 100000*10**18])
 
 
 @pytest.fixture
