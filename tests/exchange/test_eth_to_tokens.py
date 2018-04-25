@@ -1,6 +1,6 @@
 def test_eth_to_tokens_swap(t, chain, utils, uni_token, uniswap_factory, uni_token_exchange, assert_tx_failed):
     uni_token.approve(uni_token_exchange.address, 10*10**18)
-    uni_token_exchange.initiate(10*10**18, value=5*10**18)
+    uni_token_exchange.initialize(10*10**18, value=5*10**18)
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18
@@ -20,7 +20,7 @@ def test_eth_to_tokens_swap(t, chain, utils, uni_token, uniswap_factory, uni_tok
 
 def test_eth_to_tokens_payment(t, chain, utils, uni_token, uniswap_factory, uni_token_exchange, assert_tx_failed):
     uni_token.approve(uni_token_exchange.address, 10*10**18)
-    uni_token_exchange.initiate(10*10**18, value=5*10**18)
+    uni_token_exchange.initialize(10*10**18, value=5*10**18)
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18

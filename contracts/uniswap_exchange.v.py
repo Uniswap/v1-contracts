@@ -23,7 +23,7 @@ def setup(token_addr: address) -> bool:
 # Sets initial token pool, ether pool, and shares
 @public
 @payable
-def initiate(token_amount: uint256):
+def initialize(token_amount: uint256):
     assert self.invariant == convert(0, 'uint256')
     assert self.total_shares == convert(0, 'uint256')
     assert self.factory_address != 0x0000000000000000000000000000000000000000
@@ -36,8 +36,9 @@ def initiate(token_amount: uint256):
     self.eth_pool = eth_in
     self.token_pool = token_amount
     self.invariant = uint256_mul(eth_in, token_amount)
-    self.total_shares = convert(1000, 'uint256')
-    self.shares[msg.sender] = convert(1000, 'uint256')
+    initial_shares: uint256 = uint256_div(eth_in, convert(100000, 'uint256'))
+    self.total_shares = initial_shares
+    self.shares[msg.sender] = initial_shares
     self.token_address.transferFrom(msg.sender, self, token_amount)
     assert uint256_gt(self.invariant, convert(0, 'uint256'))
 
@@ -179,11 +180,16 @@ def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256):
     assert uint256_gt(tokens_divested, min_tokens)
     self.shares[msg.sender] = uint256_sub(self.shares[msg.sender], shares_burned)
     self.total_shares = uint256_sub(self.total_shares, shares_burned)
-    self.eth_pool = uint256_sub(self.eth_pool, eth_divested)
-    self.token_pool = uint256_sub(self.token_pool, tokens_divested)
-    self.invariant = uint256_mul(self.eth_pool, self.token_pool)
-    send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
+    if self.total_shares != convert(0, 'uint256'):
+        self.eth_pool = uint256_sub(self.eth_pool, eth_divested)
+        self.token_pool = uint256_sub(self.token_pool, tokens_divested)
+        self.invariant = uint256_mul(self.eth_pool, self.token_pool)
+    else:
+        self.eth_pool = convert(0, 'uint256')
+        self.token_pool = convert(0, 'uint256')
+        self.invariant = convert(0, 'uint256')
     self.token_address.transfer(msg.sender, tokens_divested)
+    send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
     log.Divestment(msg.sender, eth_divested, tokens_divested)
 
 @public
