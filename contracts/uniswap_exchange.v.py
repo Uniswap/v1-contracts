@@ -2,14 +2,18 @@ EthToToken: event({buyer: indexed(address), eth_in: indexed(uint256), tokens_out
 TokenToEth: event({buyer: indexed(address), tokens_in: indexed(uint256), eth_out: indexed(uint256)})
 Investment: event({investor: indexed(address), eth_invested: indexed(uint256), tokens_invested: indexed(uint256)})
 Divestment: event({investor: indexed(address), eth_divested: indexed(uint256), tokens_divested: indexed(uint256)})
+Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
+Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
 
-eth_pool: public(uint256)
-token_pool: public(uint256)
-invariant: public(uint256)
-total_shares: public(uint256)
-token_address: address(ERC20)
-factory_address: public(address)
-shares: uint256[address]
+eth_pool: public(uint256)                   # total ETH liquidity reserves
+token_pool: public(uint256)                 # total token liquidity reserves
+invariant: public(uint256)                  # eth_pool * token_pool
+total_shares: public(uint256)               # total ownership shares on this token exchange
+shares: uint256[address]                    # mapping of addresses to share balances
+allowances: (uint256[address])[address]     # mapping that stores share allowances
+factory_address: public(address)            # the factory that created this exchange
+token_address: address(ERC20)               # the ERC20 token that can be traded on this exchange
+
 
 # Called by factory during launch
 @public
@@ -109,7 +113,7 @@ def tokens_to_eth_payment(recipent: address, tokens_in: uint256, min_eth: uint25
 def tokens_to_tokens_incoming(recipent: address, min_tokens: uint256) -> bool:
     data: bytes[4096] = concat(method_id("exchange_to_token_lookup(address)"), convert(msg.sender, 'bytes32'))
     assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) != 0x0000000000000000000000000000000000000000
-    self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_tokens) # NEED TO PASS MIN VALUE
+    self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_tokens) 
     return True
 
 # Exchange tokens for any token in factory/registry
@@ -192,12 +196,55 @@ def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256):
     send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
     log.Divestment(msg.sender, eth_divested, tokens_divested)
 
+# Return address of token sold on this exchange
 @public
 @constant
 def get_token_address() -> address:
     return self.token_address
 
+# ERC20 compatibility for exchange shares modified from
+# https://github.com/ethereum/vyper/blob/master/examples/tokens/ERC20_solidity_compatible/ERC20.v.py
 @public
 @constant
-def get_shares(addr: address) -> uint256:
-    return self.shares[addr]
+def totalSupply() -> uint256:
+    return self.total_shares
+
+@public
+@constant
+def balanceOf(_owner : address) -> uint256:
+    return self.shares[_owner]
+
+@public
+def transfer(_to : address, _value : uint256) -> bool:
+    _sender: address = msg.sender
+    # Make sure sufficient funds are present implicitly through overflow protection
+    self.shares[_sender] = uint256_sub(self.shares[_sender], _value)
+    self.shares[_to] = uint256_add(self.shares[_to], _value)
+    # Fire transfer event
+    log.Transfer(_sender, _to, _value)
+    return True
+
+@public
+def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
+    _sender: address = msg.sender
+    allowance: uint256 = self.allowances[_from][_sender]
+    # Make sure sufficient funds/allowance are present implicitly through overflow protection
+    self.shares[_from] = uint256_sub(self.shares[_from], _value)
+    self.shares[_to] = uint256_add(self.shares[_to], _value)
+    self.allowances[_from][_sender] = uint256_sub(allowance, _value)
+    # Fire transfer event
+    log.Transfer(_from, _to, _value)
+    return True
+
+@public
+def approve(_spender : address, _value : uint256) -> bool:
+    _sender: address = msg.sender
+    self.allowances[_sender][_spender] = _value
+    # Fire approval event
+    log.Approval(_sender, _spender, _value)
+    return True
+
+@public
+@constant
+def allowance(_owner : address, _spender : address) -> uint256:
+    return self.allowances[_owner][_spender]

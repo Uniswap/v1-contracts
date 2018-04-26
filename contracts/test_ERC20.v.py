@@ -1,6 +1,7 @@
 # Modified Version of:
 # https://github.com/ethereum/vyper/blob/master/examples/tokens/ERC20_solidity_compatible/ERC20.v.py
 
+# THIS CONTRACT IS FOR TESTING PURPOSES AND IS NOT PART OF THE PROJECT
 
 # Events issued by the contract
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
