@@ -7,14 +7,15 @@ Approval: event({_owner: indexed(address), _spender: indexed(address), _value: u
 
 eth_pool: public(uint256)                   # total ETH liquidity reserves
 token_pool: public(uint256)                 # total token liquidity reserves
-total_shares: public(uint256)               # total ownership shares on this token exchange
-shares: uint256[address]                    # mapping of addresses to share balances
-allowances: (uint256[address])[address]     # mapping that stores share allowances
+total_shares: public(uint256)               # total ownership shares
+shares: uint256[address]                    # share balance of an address
+allowances: (uint256[address])[address]     # share balance that can be spent by one address on behalf of another
 factory_address: public(address)            # the factory that created this exchange
 token_address: address(ERC20)               # the ERC20 token that can be traded on this exchange
 
 
 # Called by factory during launch
+# Replaces constructor which is not supported on contracts deployed with create_with_code_of()
 @public
 def setup(token_addr: address) -> bool:
     assert self.factory_address == 0x0000000000000000000000000000000000000000
@@ -22,13 +23,15 @@ def setup(token_addr: address) -> bool:
     self.token_address = token_addr
     assert self.factory_address != 0x0000000000000000000000000000000000000000
     return True
-#
-# Sets initial token pool, ether pool, and shares
+
+# Sets initial token pool, ETH pool, and share amount
+# Constrained to limit extremely high or extremely low share cost
 @public
 @payable
 def initialize(token_amount: uint256):
     assert self.total_shares == convert(0, 'uint256')
     assert self.factory_address != 0x0000000000000000000000000000000000000000
+    assert self.token_address != 0x0000000000000000000000000000000000000000
     eth_in: uint256 = convert(msg.value, 'uint256')
     assert uint256_ge(eth_in, convert(100000, 'uint256'))
     assert uint256_le(eth_in, convert(5*10**18, 'uint256'))
@@ -60,14 +63,14 @@ def eth_to_tokens(buyer: address, recipent: address, eth_in: uint256, min_tokens
     self.token_address.transfer(recipent, tokens_out)
     log.EthToToken(buyer, eth_in, tokens_out)
 
-# Buyer sells ETH , buyer receives tokens
+# Buyer converts ETH to tokens
 @public
 @payable
 def eth_to_tokens_swap(min_tokens: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     self.eth_to_tokens(msg.sender, msg.sender, convert(msg.value, 'uint256'), min_tokens)
 
-# Buyer sells ETH, recipent receives tokens
+# Buyer sells ETH for tokens and sends tokens to recipient
 @public
 @payable
 def eth_to_tokens_payment(recipent: address, min_tokens: uint256, timeout: uint256):
@@ -94,13 +97,13 @@ def tokens_to_eth(buyer: address, recipent: address, tokens_in: uint256, min_eth
     send(recipent, as_wei_value(convert(eth_out, 'int128'), 'wei'))
     log.TokenToEth(buyer, tokens_in, eth_out)
 
-# Buyer sells tokens, buyer receives ETH
+# Buyer sells tokens for ETH
 @public
 def tokens_to_eth_swap(tokens_in: uint256, min_eth: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     self.tokens_to_eth(msg.sender, msg.sender, tokens_in, min_eth)
 
-# Buyer sells tokens, recipent receives ETH
+# Buyer sells tokens for ETH and sends tokens to recipient
 @public
 def tokens_to_eth_payment(recipent: address, tokens_in: uint256, min_eth: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
@@ -108,16 +111,17 @@ def tokens_to_eth_payment(recipent: address, tokens_in: uint256, min_eth: uint25
     assert recipent != self
     self.tokens_to_eth(msg.sender, recipent, tokens_in, min_eth)
 
-# Called by other uniswap exchange contracts in token to token trades
+# Receives ETH from another Uniswap exchange and sends tokens to buyer
+# Can only be called by other exchanges during token to token trades
 @public
 @payable
-def tokens_to_tokens_incoming(recipent: address, min_tokens: uint256) -> bool:
+def receive_tokens_to_tokens(recipent: address, min_tokens: uint256) -> bool:
     data: bytes[4096] = concat(method_id("exchange_to_token_lookup(address)"), convert(msg.sender, 'bytes32'))
     assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) != 0x0000000000000000000000000000000000000000
     self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_tokens)
     return True
 
-# Exchange tokens for any token in factory/registry
+# Exchange tokens for any other tokens
 @private
 def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tokens_in: uint256, min_tokens: uint256):
     assert uint256_gt(self.total_shares, convert(0, 'uint256'))
@@ -136,17 +140,17 @@ def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tok
     self.eth_pool = new_eth_pool
     self.token_pool = new_token_pool
     self.token_address.transferFrom(buyer, self, tokens_in)
-    exchange_data: bytes[4096] = concat(method_id("tokens_to_tokens_incoming(address,uint256)"), convert(recipent, 'bytes32'), convert(min_tokens, 'bytes32'))
-    assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_out, 'int128'), 'wei'), gas=100000, outsize=32), 0, type=bool) == True
+    exchange_data: bytes[4096] = concat(method_id("receive_tokens_to_tokens(address,uint256)"), convert(recipent, 'bytes32'), convert(min_tokens, 'bytes32'))
+    assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_out, 'int128'), 'wei'), gas=55000, outsize=32), 0, type=bool) == True
     log.TokenToEth(buyer, tokens_in, eth_out)
 
-# Buyer sells tokens, buyer receives different tokens
+# Buyer sells tokens for any other tokens
 @public
 def tokens_to_tokens_swap(token_addr: address, tokens_in: uint256, min_tokens: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     self.tokens_to_tokens(token_addr, msg.sender, msg.sender, tokens_in, min_tokens)
 
-# Buyer sells tokens, recipent receives different tokens
+# Buyer sells tokens for any other tokens and sends tokens to recipient
 @public
 def tokens_to_tokens_payment(token_addr: address, recipent: address, tokens_in: uint256, min_tokens: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
@@ -154,15 +158,17 @@ def tokens_to_tokens_payment(token_addr: address, recipent: address, tokens_in: 
     assert recipent != self
     self.tokens_to_tokens(token_addr, msg.sender, recipent, tokens_in, min_tokens)
 
-# Lock up ETH and tokens for shares
+# Lock up ETH and tokens at current price ratio to mint shares
+# Shares are minted proportional to liquidity invested
+# Trading fees are added to liquidity pools increasing value of shares over time
 @public
 @payable
 def invest(min_shares: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(min_shares, convert(0, 'uint256'))
-    assert msg.value > 0
     eth_invested: uint256 = convert(msg.value, 'uint256')
+    assert uint256_gt(eth_invested, convert(0, 'uint256'))
     shares_minted: uint256 = uint256_div(uint256_mul(eth_invested, self.total_shares), self.eth_pool)
     assert uint256_gt(shares_minted, min_shares)
     tokens_invested: uint256 = uint256_div(uint256_mul(shares_minted, self.token_pool), self.total_shares)
@@ -173,7 +179,8 @@ def invest(min_shares: uint256, timeout: uint256):
     self.token_address.transferFrom(msg.sender, self, tokens_invested)
     log.Investment(msg.sender, eth_invested, tokens_invested)
 
-# Burn shares to receive ETH, tokens, and fees
+# Burn shares to receive ETH and tokens at current price ratio
+# Trading fees accumulated since investment are included in divested ETH and tokens
 @public
 @payable
 def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeout: uint256):
@@ -200,10 +207,10 @@ def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeou
     send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
     log.Divestment(msg.sender, eth_divested, tokens_divested)
 
-# Return address of token sold on this exchange
+# Return address of ERC20 token sold on this exchange
 @public
 @constant
-def get_token_address() -> address:
+def get_exchange_token() -> address:
     return self.token_address
 
 # ERC20 compatibility for exchange shares modified from
