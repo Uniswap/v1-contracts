@@ -13,6 +13,5 @@ def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, uni
     # Test UNI Exchange initial state
     assert uni_token_exchange.eth_pool() == 0
     assert uni_token_exchange.token_pool() == 0
-    assert uni_token_exchange.invariant() == 0
     assert uni_token_exchange.total_shares() == 0
     assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()

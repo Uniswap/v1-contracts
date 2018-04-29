@@ -7,7 +7,6 @@ Approval: event({_owner: indexed(address), _spender: indexed(address), _value: u
 
 eth_pool: public(uint256)                   # total ETH liquidity reserves
 token_pool: public(uint256)                 # total token liquidity reserves
-invariant: public(uint256)                  # eth_pool * token_pool
 total_shares: public(uint256)               # total ownership shares on this token exchange
 shares: uint256[address]                    # mapping of addresses to share balances
 allowances: (uint256[address])[address]     # mapping that stores share allowances
@@ -23,12 +22,11 @@ def setup(token_addr: address) -> bool:
     self.token_address = token_addr
     assert self.factory_address != 0x0000000000000000000000000000000000000000
     return True
-
+#
 # Sets initial token pool, ether pool, and shares
 @public
 @payable
 def initialize(token_amount: uint256):
-    assert self.invariant == convert(0, 'uint256')
     assert self.total_shares == convert(0, 'uint256')
     assert self.factory_address != 0x0000000000000000000000000000000000000000
     eth_in: uint256 = convert(msg.value, 'uint256')
@@ -39,27 +37,26 @@ def initialize(token_amount: uint256):
     assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) == self
     self.eth_pool = eth_in
     self.token_pool = token_amount
-    self.invariant = uint256_mul(eth_in, token_amount)
     initial_shares: uint256 = uint256_div(eth_in, convert(100000, 'uint256'))
     self.total_shares = initial_shares
     self.shares[msg.sender] = initial_shares
     self.token_address.transferFrom(msg.sender, self, token_amount)
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
 
 # Exchange ETH for tokens
 @private
 def eth_to_tokens(buyer: address, recipent: address, eth_in: uint256, min_tokens: uint256):
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(eth_in, convert(0, 'uint256'))
+    invariant: uint256 = uint256_mul(self.eth_pool, self.token_pool)
     fee: uint256 = uint256_div(eth_in, convert(500, 'uint256'))
     new_eth_pool: uint256 = uint256_add(self.eth_pool, eth_in)
     temp_eth_pool: uint256 = uint256_sub(new_eth_pool, fee)
-    new_token_pool: uint256 = uint256_div(self.invariant, temp_eth_pool)
+    new_token_pool: uint256 = uint256_div(invariant, temp_eth_pool)
     tokens_out: uint256 = uint256_sub(self.token_pool, new_token_pool)
     assert uint256_ge(tokens_out, min_tokens)
     self.eth_pool = new_eth_pool
     self.token_pool = new_token_pool
-    self.invariant = uint256_mul(new_eth_pool, new_token_pool)
     self.token_address.transfer(recipent, tokens_out)
     log.EthToToken(buyer, eth_in, tokens_out)
 
@@ -82,17 +79,17 @@ def eth_to_tokens_payment(recipent: address, min_tokens: uint256, timeout: uint2
 # Exchange tokens for ETH
 @private
 def tokens_to_eth(buyer: address, recipent: address, tokens_in: uint256, min_eth: uint256):
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(tokens_in, convert(0, 'uint256'))
+    invariant: uint256 = uint256_mul(self.eth_pool, self.token_pool)
     fee: uint256 = uint256_div(tokens_in, convert(500, 'uint256'))
     new_token_pool: uint256 = uint256_add(self.token_pool, tokens_in)
     temp_token_pool: uint256 = uint256_sub(new_token_pool, fee)
-    new_eth_pool: uint256 = uint256_div(self.invariant, temp_token_pool)
+    new_eth_pool: uint256 = uint256_div(invariant, temp_token_pool)
     eth_out: uint256 = uint256_sub(self.eth_pool, new_eth_pool)
     assert uint256_ge(eth_out, min_eth)
     self.eth_pool = new_eth_pool
     self.token_pool = new_token_pool
-    self.invariant = uint256_mul(new_eth_pool, new_token_pool)
     self.token_address.transferFrom(buyer, self, tokens_in)
     send(recipent, as_wei_value(convert(eth_out, 'int128'), 'wei'))
     log.TokenToEth(buyer, tokens_in, eth_out)
@@ -123,21 +120,21 @@ def tokens_to_tokens_incoming(recipent: address, min_tokens: uint256) -> bool:
 # Exchange tokens for any token in factory/registry
 @private
 def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tokens_in: uint256, min_tokens: uint256):
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(tokens_in, convert(0, 'uint256'))
     assert uint256_gt(min_tokens, convert(0, 'uint256'))
     assert token_addr != self.token_address
     factory_data: bytes[4096] = concat(method_id("token_to_exchange_lookup(address)"), convert(token_addr, 'bytes32'))
     exchange: address = extract32(raw_call(self.factory_address, factory_data, gas=750, outsize=32), 0, type=address)
     assert exchange != 0x0000000000000000000000000000000000000000
+    invariant: uint256 = uint256_mul(self.eth_pool, self.token_pool)
     fee: uint256 = uint256_div(tokens_in, convert(500, 'uint256'))
     new_token_pool: uint256 = uint256_add(self.token_pool, tokens_in)
     temp_token_pool: uint256 = uint256_sub(new_token_pool, fee)
-    new_eth_pool: uint256 = uint256_div(self.invariant, temp_token_pool)
+    new_eth_pool: uint256 = uint256_div(invariant, temp_token_pool)
     eth_out: uint256 = uint256_sub(self.eth_pool, new_eth_pool)
     self.eth_pool = new_eth_pool
     self.token_pool = new_token_pool
-    self.invariant = uint256_mul(new_eth_pool, new_token_pool)
     self.token_address.transferFrom(buyer, self, tokens_in)
     exchange_data: bytes[4096] = concat(method_id("tokens_to_tokens_incoming(address,uint256)"), convert(recipent, 'bytes32'), convert(min_tokens, 'bytes32'))
     assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_out, 'int128'), 'wei'), gas=100000, outsize=32), 0, type=bool) == True
@@ -162,7 +159,7 @@ def tokens_to_tokens_payment(token_addr: address, recipent: address, tokens_in: 
 @payable
 def invest(min_shares: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(min_shares, convert(0, 'uint256'))
     assert msg.value > 0
     eth_invested: uint256 = convert(msg.value, 'uint256')
@@ -173,7 +170,6 @@ def invest(min_shares: uint256, timeout: uint256):
     self.total_shares = uint256_add(self.total_shares, shares_minted)
     self.eth_pool = uint256_add(self.eth_pool, eth_invested)
     self.token_pool = uint256_add(self.token_pool, tokens_invested)
-    self.invariant = uint256_mul(self.eth_pool, self.token_pool)
     self.token_address.transferFrom(msg.sender, self, tokens_invested)
     log.Investment(msg.sender, eth_invested, tokens_invested)
 
@@ -182,7 +178,7 @@ def invest(min_shares: uint256, timeout: uint256):
 @payable
 def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeout: uint256):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
-    assert uint256_gt(self.invariant, convert(0, 'uint256'))
+    assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(shares_burned, convert(0, 'uint256'))
     assert uint256_gt(min_eth, convert(0, 'uint256'))
     assert uint256_gt(min_tokens, convert(0, 'uint256'))
@@ -195,11 +191,11 @@ def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeou
     if self.total_shares != convert(0, 'uint256'):
         self.eth_pool = uint256_sub(self.eth_pool, eth_divested)
         self.token_pool = uint256_sub(self.token_pool, tokens_divested)
-        self.invariant = uint256_mul(self.eth_pool, self.token_pool)
+        assert self.eth_pool != convert(0, 'uint256')
+        assert self.token_pool != convert(0, 'uint256')
     else:
         self.eth_pool = convert(0, 'uint256')
         self.token_pool = convert(0, 'uint256')
-        self.invariant = convert(0, 'uint256')
     self.token_address.transfer(msg.sender, tokens_divested)
     send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
     log.Divestment(msg.sender, eth_divested, tokens_divested)

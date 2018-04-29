@@ -9,11 +9,9 @@ def test_tokens_to_tokens_swap(t, chain, utils, uni_token, swap_token, uniswap_f
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18
-    assert uni_token_exchange.invariant() == 50000000000000000000000000000000000000
     # Starting balances of SWAP exchange
     assert swap_token_exchange.eth_pool() == 5*10**18
     assert swap_token_exchange.token_pool() == 20*10**18
-    assert swap_token_exchange.invariant() == 100000000000000000000000000000000000000
     # Starting balances of BUYER
     assert uni_token.balanceOf(t.a1) == 2*10**18
     assert swap_token.balanceOf(t.a1) == 0
@@ -23,11 +21,9 @@ def test_tokens_to_tokens_swap(t, chain, utils, uni_token, swap_token, uniswap_f
     # Updated balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 4168056018672890963
     assert uni_token_exchange.token_pool() == 12*10**18
-    assert uni_token_exchange.invariant() == 50016672224074691556000000000000000000
     # Updated balances of SWAP exchange
     assert swap_token_exchange.eth_pool() == 5831943981327109037
     assert swap_token_exchange.token_pool() == 17151834628633326487
-    assert swap_token_exchange.invariant() == 100028538731176018770023024800269163019
     # Updated balances of BUYER
     assert uni_token.balanceOf(t.a1) == 0
     assert swap_token.balanceOf(t.a1) == 2848165371366673513
@@ -44,11 +40,9 @@ def test_tokens_to_tokens_payment(t, chain, utils, uni_token, swap_token, uniswa
     # Starting balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 5*10**18
     assert uni_token_exchange.token_pool() == 10*10**18
-    assert uni_token_exchange.invariant() == 50000000000000000000000000000000000000
     # Starting balances of SWAP exchange
     assert swap_token_exchange.eth_pool() == 5*10**18
     assert swap_token_exchange.token_pool() == 20*10**18
-    assert swap_token_exchange.invariant() == 100000000000000000000000000000000000000
     # Starting balances of BUYER
     assert uni_token.balanceOf(t.a1) == 2*10**18
     assert swap_token.balanceOf(t.a1) == 0
@@ -62,11 +56,9 @@ def test_tokens_to_tokens_payment(t, chain, utils, uni_token, swap_token, uniswa
     # Updated balances of UNI exchange
     assert uni_token_exchange.eth_pool() == 4168056018672890963
     assert uni_token_exchange.token_pool() == 12*10**18
-    assert uni_token_exchange.invariant() == 50016672224074691556000000000000000000
     # Updated balances of SWAP exchange
     assert swap_token_exchange.eth_pool() == 5831943981327109037
     assert swap_token_exchange.token_pool() == 17151834628633326487
-    assert swap_token_exchange.invariant() == 100028538731176018770023024800269163019
     # Updated balances of BUYER
     assert uni_token.balanceOf(t.a1) == 0
     assert swap_token.balanceOf(t.a1) == 0
