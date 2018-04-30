@@ -35,7 +35,10 @@ def initialize(tokens_invested: uint256):
     assert uint256_ge(eth_invested, convert(100000, 'uint256'))
     assert uint256_le(eth_invested, convert(5*10**18, 'uint256'))
     assert uint256_ge(tokens_invested, convert(100000, 'uint256'))
-    data: bytes[4096] = concat(method_id("token_to_exchange_lookup(address)"), convert(self.token_address, 'bytes32'))
+    data: bytes[4096] = concat(
+        method_id("token_to_exchange_lookup(address)"),
+        convert(self.token_address, 'bytes32')
+    )
     assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) == self
     self.eth_pool = eth_invested
     self.token_pool = tokens_invested
@@ -48,7 +51,12 @@ def initialize(tokens_invested: uint256):
 
 # Exchange ETH for tokens
 @private
-def eth_to_tokens(buyer: address, recipent: address, eth_sold: uint256, min_token_purchase: uint256):
+def eth_to_tokens(
+        buyer: address,
+        recipent: address,
+        eth_sold: uint256,
+        min_token_purchase: uint256
+    ):
     assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(eth_sold, convert(0, 'uint256'))
     eth_in_pool: uint256 = self.eth_pool
@@ -68,22 +76,29 @@ def eth_to_tokens(buyer: address, recipent: address, eth_sold: uint256, min_toke
 # Buyer converts ETH to tokens
 @public
 @payable
-def eth_to_tokens_swap(min_token_purchase: uint256, timeout: uint256):
+def eth_to_tokens_swap(min_token_purchase: uint256, timeout: uint256) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     self.eth_to_tokens(msg.sender, msg.sender, convert(msg.value, 'uint256'), min_token_purchase)
+    return True
 
 # Buyer sells ETH for tokens and sends tokens to recipient
 @public
 @payable
-def eth_to_tokens_payment(recipent: address, min_token_purchase: uint256, timeout: uint256):
+def eth_to_tokens_payment(recipent: address, min_token_purchase: uint256, timeout: uint256) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     assert recipent != 0x0000000000000000000000000000000000000000
     assert recipent != self
     self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_token_purchase)
+    return True
 
 # Exchange tokens for ETH
 @private
-def tokens_to_eth(buyer: address, recipent: address, tokens_sold: uint256, min_eth_purchase: uint256):
+def tokens_to_eth(
+        buyer: address,
+        recipent: address,
+        tokens_sold: uint256,
+        min_eth_purchase: uint256
+    ):
     assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(tokens_sold, convert(0, 'uint256'))
     eth_in_pool: uint256 = self.eth_pool
@@ -103,36 +118,43 @@ def tokens_to_eth(buyer: address, recipent: address, tokens_sold: uint256, min_e
 
 # Buyer sells tokens for ETH
 @public
-def tokens_to_eth_swap(tokens_sold: uint256, min_eth_purchase: uint256, timeout: uint256):
+def tokens_to_eth_swap(tokens_sold: uint256, min_eth_purchase: uint256, timeout: uint256) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     self.tokens_to_eth(msg.sender, msg.sender, tokens_sold, min_eth_purchase)
+    return True
 
 # Buyer sells tokens for ETH and sends tokens to recipient
 @public
-def tokens_to_eth_payment(recipent: address, tokens_sold: uint256, min_eth_purchase: uint256, timeout: uint256):
+def tokens_to_eth_payment(
+        recipent: address,
+        tokens_sold: uint256,
+        min_eth_purchase: uint256,
+        timeout: uint256
+    ) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     assert recipent != 0x0000000000000000000000000000000000000000
     assert recipent != self
     self.tokens_to_eth(msg.sender, recipent, tokens_sold, min_eth_purchase)
-
-# Receives ETH from another Uniswap exchange and sends tokens to buyer
-# Can only be called by other exchanges during token to token trades
-@public
-@payable
-def receive_tokens_to_tokens(recipent: address, min_token_purchase: uint256) -> bool:
-    data: bytes[4096] = concat(method_id("exchange_to_token_lookup(address)"), convert(msg.sender, 'bytes32'))
-    assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) != 0x0000000000000000000000000000000000000000
-    self.eth_to_tokens(msg.sender, recipent, convert(msg.value, 'uint256'), min_token_purchase)
     return True
 
 # Exchange tokens for any other tokens
 @private
-def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tokens_sold: uint256, min_token_purchase: uint256):
+def tokens_to_tokens(
+        token_addr: address,
+        buyer: address,
+        recipent: address,
+        tokens_sold: uint256,
+        min_token_purchase: uint256,
+        timeout: uint256
+    ):
     assert uint256_gt(self.total_shares, convert(0, 'uint256'))
     assert uint256_gt(tokens_sold, convert(0, 'uint256'))
     assert uint256_gt(min_token_purchase, convert(0, 'uint256'))
     assert token_addr != self.token_address
-    factory_data: bytes[4096] = concat(method_id("token_to_exchange_lookup(address)"), convert(token_addr, 'bytes32'))
+    factory_data: bytes[4096] = concat(
+        method_id("token_to_exchange_lookup(address)"),
+        convert(token_addr, 'bytes32')
+    )
     exchange: address = extract32(raw_call(self.factory_address, factory_data, gas=750, outsize=32), 0, type=address)
     assert exchange != 0x0000000000000000000000000000000000000000
     eth_in_pool: uint256 = self.eth_pool
@@ -146,23 +168,42 @@ def tokens_to_tokens(token_addr: address, buyer: address, recipent: address, tok
     self.eth_pool = new_eth_pool
     self.token_pool = new_token_pool
     self.token_address.transferFrom(buyer, self, tokens_sold)
-    exchange_data: bytes[4096] = concat(method_id("receive_tokens_to_tokens(address,uint256)"), convert(recipent, 'bytes32'), convert(min_token_purchase, 'bytes32'))
-    assert extract32(raw_call(exchange, exchange_data, value=as_wei_value(convert(eth_purchased, 'int128'), 'wei'), gas=55000, outsize=32), 0, type=bool) == True
+    exchange_data: bytes[4096] = concat(
+        method_id("eth_to_tokens_payment(address,uint256,uint256)"),
+        convert(recipent, 'bytes32'),
+        convert(min_token_purchase, 'bytes32'),
+        convert(timeout, 'bytes32'),
+    )
+    wei_purchased: wei_value = as_wei_value(convert(eth_purchased, 'int128'), 'wei')
+    assert extract32(raw_call(exchange, exchange_data, value=wei_purchased, gas=55000, outsize=32), 0, type=bool) == True
     log.TokenToEth(buyer, tokens_sold, eth_purchased)
 
 # Buyer sells tokens for any other tokens
 @public
-def tokens_to_tokens_swap(token_addr: address, tokens_sold: uint256, min_token_purchase: uint256, timeout: uint256):
+def tokens_to_tokens_swap(
+        token_addr: address,
+        tokens_sold: uint256,
+        min_token_purchase: uint256,
+        timeout: uint256
+    ) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
-    self.tokens_to_tokens(token_addr, msg.sender, msg.sender, tokens_sold, min_token_purchase)
+    self.tokens_to_tokens(token_addr, msg.sender, msg.sender, tokens_sold, min_token_purchase, timeout)
+    return True
 
 # Buyer sells tokens for any other tokens and sends tokens to recipient
 @public
-def tokens_to_tokens_payment(token_addr: address, recipent: address, tokens_sold: uint256, min_token_purchase: uint256, timeout: uint256):
+def tokens_to_tokens_payment(
+        token_addr: address,
+        recipent: address,
+        tokens_sold: uint256,
+        min_token_purchase: uint256,
+        timeout: uint256
+    ) -> bool:
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     assert recipent != 0x0000000000000000000000000000000000000000
     assert recipent != self
-    self.tokens_to_tokens(token_addr, msg.sender, recipent, tokens_sold, min_token_purchase)
+    self.tokens_to_tokens(token_addr, msg.sender, recipent, tokens_sold, min_token_purchase, timeout)
+    return True
 
 # Lock up ETH and tokens at current price ratio to mint shares
 # Shares are minted proportional to liquidity invested
@@ -192,7 +233,12 @@ def invest(min_shares: uint256, timeout: uint256):
 # Trading fees accumulated since investment are included in divested ETH and tokens
 @public
 @payable
-def divest(shares_burned: uint256, min_eth_purchase: uint256, min_token_purchase: uint256, timeout: uint256):
+def divest(
+        shares_burned: uint256,
+        min_eth_purchase: uint256,
+        min_token_purchase: uint256,
+        timeout: uint256
+    ):
     assert uint256_gt(timeout, convert(block.timestamp, 'uint256'))
     share_total: uint256 = self.total_shares
     assert uint256_gt(share_total, convert(0, 'uint256'))
