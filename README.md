@@ -1,5 +1,5 @@
 ## How it works
-https://hackmd.io/Tlf08KuPTbqsHLKk5hzAvA
+https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
 
 ## Installation: (will be improved soon)
 
