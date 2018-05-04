@@ -1,3 +1,9 @@
+class Factory():
+    def token_to_exchange_lookup(token_addr: address) -> address: pass
+
+# class Exchange():
+#     def eth_to_tokens_payment(recipent: address, min_token_purchase: uint256, timeout: uint256) -> bool: pass
+
 EthToToken: event({buyer: indexed(address), eth_sold: indexed(uint256), tokens_purchased: indexed(uint256)})
 TokenToEth: event({buyer: indexed(address), tokens_sold: indexed(uint256), eth_purchased: indexed(uint256)})
 Investment: event({investor: indexed(address), eth_invested: indexed(uint256), tokens_invested: indexed(uint256)})
@@ -16,6 +22,7 @@ token_address: address(ERC20)               # the ERC20 token that can be traded
 # Called by factory during launch
 # Replaces constructor which is not supported on contracts deployed with create_with_code_of()
 @public
+@payable
 def setup(token_addr: address) -> bool:
     assert self.factory_address == 0x0000000000000000000000000000000000000000
     self.factory_address = msg.sender
@@ -32,14 +39,9 @@ def initialize(tokens_invested: uint256):
     assert self.factory_address != 0x0000000000000000000000000000000000000000
     assert self.token_address != 0x0000000000000000000000000000000000000000
     eth_invested: uint256 = convert(msg.value, 'uint256')
-    assert uint256_ge(eth_invested, convert(100000, 'uint256'))
-    assert uint256_le(eth_invested, convert(5*10**18, 'uint256'))
-    assert uint256_ge(tokens_invested, convert(100000, 'uint256'))
-    data: bytes[4096] = concat(
-        method_id("token_to_exchange_lookup(address)"),
-        convert(self.token_address, 'bytes32')
-    )
-    assert extract32(raw_call(self.factory_address, data, gas=750, outsize=32), 0, type=address) == self
+    assert uint256_ge(eth_invested, convert(100000000, 'uint256'))
+    assert uint256_ge(tokens_invested, convert(100000000, 'uint256'))
+    assert Factory(self.factory_address).token_to_exchange_lookup(self.token_address) == self
     self.eth_pool = eth_invested
     self.token_pool = tokens_invested
     initial_shares: uint256 = uint256_div(eth_invested, convert(100000, 'uint256'))
@@ -151,12 +153,8 @@ def tokens_to_tokens(
     assert uint256_gt(tokens_sold, convert(0, 'uint256'))
     assert uint256_gt(min_token_purchase, convert(0, 'uint256'))
     assert token_addr != self.token_address
-    factory_data: bytes[4096] = concat(
-        method_id("token_to_exchange_lookup(address)"),
-        convert(token_addr, 'bytes32')
-    )
-    exchange: address = extract32(raw_call(self.factory_address, factory_data, gas=750, outsize=32), 0, type=address)
-    assert exchange != 0x0000000000000000000000000000000000000000
+    exchange_addr: address = Factory(self.factory_address).token_to_exchange_lookup(token_addr)
+    assert exchange_addr != 0x0000000000000000000000000000000000000000
     eth_in_pool: uint256 = self.eth_pool
     tokens_in_pool: uint256 = self.token_pool
     invariant: uint256 = uint256_mul(eth_in_pool, tokens_in_pool)
@@ -175,7 +173,8 @@ def tokens_to_tokens(
         convert(timeout, 'bytes32'),
     )
     wei_purchased: wei_value = as_wei_value(convert(eth_purchased, 'int128'), 'wei')
-    assert extract32(raw_call(exchange, exchange_data, value=wei_purchased, gas=55000, outsize=32), 0, type=bool) == True
+    assert extract32(raw_call(exchange_addr, exchange_data, value=wei_purchased, gas=55000, outsize=32), 0, type=bool) == True
+    # assert Exchange(exchange_addr).eth_to_tokens_payment(recipent, min_token_purchase, timeout, value=wei_purchased) == True
     log.TokenToEth(buyer, tokens_sold, eth_purchased)
 
 # Buyer sells tokens for any other tokens

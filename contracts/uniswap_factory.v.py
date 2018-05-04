@@ -1,3 +1,6 @@
+class Exchange():
+    def setup(token_addr: address) -> bool: pass
+
 Launch: event({token: indexed(address), exchange: indexed(address)})
 
 exchange_template: public(address)
@@ -5,18 +8,17 @@ token_to_exchange: address[address]
 exchange_to_token: address[address]
 
 @public
-def __init__(template: address):
-    self.exchange_template = template
+def __init__(template_contract: address):
+    self.exchange_template = template_contract
 
 @public
-def launch_exchange(token: address) -> address:
-    assert self.token_to_exchange[token] == 0x0000000000000000000000000000000000000000
+def launch_exchange(token_addr: address) -> address:
+    assert self.token_to_exchange[token_addr] == 0x0000000000000000000000000000000000000000
     exchange_addr: address = create_with_code_of(self.exchange_template)
-    data: bytes[4096] = concat(method_id("setup(address)"), convert(token, 'bytes32'))
-    assert extract32(raw_call(exchange_addr, data, gas=50000, outsize=32), 0, type=bool) == True
-    self.token_to_exchange[token] = exchange_addr
-    self.exchange_to_token[exchange_addr] = token
-    log.Launch(token, exchange_addr)
+    assert Exchange(exchange_addr).setup(token_addr) == True
+    self.token_to_exchange[token_addr] = exchange_addr
+    self.exchange_to_token[exchange_addr] = token_addr
+    log.Launch(token_addr, exchange_addr)
     return exchange_addr
 
 @public
