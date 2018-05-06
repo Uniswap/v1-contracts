@@ -1,4 +1,4 @@
-class Exchange():
+contract Exchange():
     def setup(token_addr: address) -> bool: pass
 
 Launch: event({token: indexed(address), exchange: indexed(address)})

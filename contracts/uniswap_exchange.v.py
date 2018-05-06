@@ -1,7 +1,7 @@
-class Factory():
+contract Factory():
     def token_to_exchange_lookup(token_addr: address) -> address: pass
 
-# class Exchange():
+# contract Exchange():
 #     def eth_to_tokens_payment(recipent: address, min_token_purchase: uint256, timeout: uint256) -> bool: pass
 
 EthToToken: event({buyer: indexed(address), eth_sold: indexed(uint256), tokens_purchased: indexed(uint256)})
