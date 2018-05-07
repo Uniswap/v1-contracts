@@ -1,4 +1,4 @@
-## How it works
+## Whitepaper
 https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
 
 ## Installation: (will be improved soon)
