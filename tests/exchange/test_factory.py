@@ -11,7 +11,7 @@ def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, uni
     # Can't call setup on exchange
     assert_tx_failed(lambda: uni_token_exchange.setup(uniswap_factory.address))
     # Test UNI Exchange initial state
-    assert uni_token_exchange.eth_pool() == 0
-    assert uni_token_exchange.token_pool() == 0
+    assert chain.head_state.get_balance(uni_token_exchange.address) == 0
+    assert uni_token.balanceOf(uni_token_exchange.address) == 0
     assert uni_token_exchange.total_shares() == 0
     assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()
