@@ -7,36 +7,12 @@ contract Exchange():
 contract Token():
     def balanceOf(_owner : address) -> uint256: pass
 
-EthToToken: event({
-    buyer: indexed(address),
-    eth_sold: indexed(uint256),
-    tokens_purchased: indexed(uint256)
-})
-TokenToEth: event({
-    buyer: indexed(address),
-    tokens_sold: indexed(uint256),
-    eth_purchased: indexed(uint256)
-})
-Investment: event({
-    investor: indexed(address),
-    eth_invested: indexed(uint256),
-    tokens_invested: indexed(uint256)
-})
-Divestment: event({
-    investor: indexed(address),
-    eth_divested: indexed(uint256),
-    tokens_divested: indexed(uint256)
-})
-Transfer: event({
-    _from: indexed(address),
-    _to: indexed(address),
-    _value: uint256
-})
-Approval: event({
-    _owner: indexed(address),
-    _spender: indexed(address),
-    _value: uint256
-})
+EthToToken: event({buyer: indexed(address), eth_sold: indexed(uint256), tokens_purchased: indexed(uint256)})
+TokenToEth: event({buyer: indexed(address), tokens_sold: indexed(uint256), eth_purchased: indexed(uint256)})
+Investment: event({investor: indexed(address), eth_invested: indexed(uint256), tokens_invested: indexed(uint256)})
+Divestment: event({investor: indexed(address), eth_divested: indexed(uint256), tokens_divested: indexed(uint256)})
+Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
+Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
 
 total_shares: public(uint256)                       # total share supply
 shares: uint256[address]                            # share balance of an address
