@@ -14,4 +14,4 @@ def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, uni
     assert chain.head_state.get_balance(uni_token_exchange.address) == 0
     assert uni_token.balanceOf(uni_token_exchange.address) == 0
     assert uni_token_exchange.total_shares() == 0
-    assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()
+    assert utils.remove_0x_head(uni_token_exchange.factory()) == uniswap_factory.address.hex()

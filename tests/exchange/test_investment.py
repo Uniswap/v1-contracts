@@ -5,10 +5,10 @@ def test_initialize(t, chain, utils, uni_token, uniswap_factory, uni_token_excha
     assert chain.head_state.get_balance(uni_token_exchange.address) == 5*10**18
     assert uni_token.balanceOf(uni_token_exchange.address) == 10*10**18
     assert utils.remove_0x_head(uni_token_exchange.get_exchange_token()) == uni_token.address.hex()
-    assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()
+    assert utils.remove_0x_head(uni_token_exchange.factory()) == uniswap_factory.address.hex()
     assert uni_token_exchange.total_shares() == 50000000000000
     assert uni_token_exchange.balanceOf(t.a0) == 50000000000000
-    assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()
+    assert utils.remove_0x_head(uni_token_exchange.factory()) == uniswap_factory.address.hex()
 
 def test_invest_divest(t, chain, utils, uni_token, uniswap_factory, uni_token_exchange, assert_tx_failed):
     uni_token.transfer(t.a1, 10*10**18)

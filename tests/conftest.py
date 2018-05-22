@@ -196,35 +196,41 @@ def exchange_abi(chain):
 
 @pytest.fixture
 def uniswap_exchange(t, chain):
+    chain.mine()
     t.languages['vyper'] = compiler.Compiler()
     return chain.contract(EXCHANGE_CODE, language='vyper')
 
 
 @pytest.fixture
 def uni_token(t, chain):
+    chain.mine()
     t.languages['vyper'] = compiler.Compiler()
     return chain.contract(ERC20_CODE, language='vyper', args=["UNI Token", "UNI", 18, 100000*10**18])
 
 
 @pytest.fixture
 def swap_token(t, chain):
+    chain.mine()
     t.languages['vyper'] = compiler.Compiler()
     return chain.contract(ERC20_CODE, language='vyper', args=["SWAP Token", "SWAP", 18, 100000*10**18])
 
 
 @pytest.fixture
 def uniswap_factory(t, chain, uniswap_exchange):
+    chain.mine()
     t.languages['vyper'] = compiler.Compiler()
     return chain.contract(FACTORY_CODE, language='vyper', args=[uniswap_exchange.address])
 
 
 @pytest.fixture
 def uni_token_exchange(t, chain, uniswap_factory, exchange_abi, uni_token):
+    chain.mine()
     uni_exchange_address = uniswap_factory.launch_exchange(uni_token.address)
     return t.ABIContract(chain, exchange_abi, uni_exchange_address)
 
 
 @pytest.fixture
 def swap_token_exchange(t, chain, uniswap_factory, exchange_abi, swap_token):
+    chain.mine()
     swap_exchange_address = uniswap_factory.launch_exchange(swap_token.address)
     return t.ABIContract(chain, exchange_abi, swap_exchange_address)
