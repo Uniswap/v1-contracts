@@ -10,6 +10,7 @@ https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
 $ xcode-select --install (if needed)
 $ brew install python3
 $ brew install pkg-config autoconf automake libyaml
+$ brew install gmp
 ```
 
 2) Clone Uniswap repo
@@ -28,14 +29,12 @@ $ source uniswap_env/bin/activate
 
 4) [Install Vyper](https://vyper.readthedocs.io/en/latest/installing-vyper.html)
 ```
-$ brew install gmp
-$ export CFLAGS="-I$(brew --prefix openssl)/include"
-$ export LDFLAGS="-L$(brew --prefix openssl)/lib"
 $ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
 $ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
 $ pip install scrypt
 $ git clone https://github.com/ethereum/vyper.git
 $ cd vyper
+$ git reset --hard 89ef7c38e4678b7a49ff1da82bf1045638ce0f12
 $ make
 $ make test
 $ cd ..
