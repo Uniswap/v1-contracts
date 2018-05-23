@@ -4,8 +4,8 @@ def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, uni
     exchange_address = uniswap_factory.launch_exchange(uni_token.address)
     uni_token_exchange = t.ABIContract(chain, exchange_abi, exchange_address)
     # assert utils.remove_0x_head(uni_token_exchange.uniswap_factory()) == uniswap_factory.address.hex()
-    assert uniswap_factory.token_to_exchange_lookup(uni_token.address) == exchange_address
-    assert utils.remove_0x_head(uniswap_factory.exchange_to_token_lookup(uni_token_exchange.address)) == uni_token.address.hex()
+    assert uniswap_factory.get_token_to_exchange(uni_token.address) == exchange_address
+    assert utils.remove_0x_head(uniswap_factory.get_exchange_to_token(uni_token_exchange.address)) == uni_token.address.hex()
     # Exchange already exists
     assert_tx_failed(lambda: uniswap_factory.launch_exchange(uni_token.address))
     # Can't call setup on exchange
@@ -13,5 +13,5 @@ def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, uni
     # Test UNI Exchange initial state
     assert chain.head_state.get_balance(uni_token_exchange.address) == 0
     assert uni_token.balanceOf(uni_token_exchange.address) == 0
-    assert uni_token_exchange.total_shares() == 0
-    assert utils.remove_0x_head(uni_token_exchange.factory()) == uniswap_factory.address.hex()
+    assert uni_token_exchange.totalSupply() == 0
+    assert utils.remove_0x_head(uni_token_exchange.getFactoryAddress()) == uniswap_factory.address.hex()

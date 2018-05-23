@@ -1,5 +1,5 @@
 contract Factory():
-    def token_to_exchange_lookup(_token: address) -> address: pass
+    def get_token_to_exchange(_token: address) -> address: pass
 
 contract Exchange():
     def pay_eth_to_tokens_all(recipent: address, min_tokens_bought: uint256, timeout: uint256) -> bool: pass
@@ -14,10 +14,10 @@ Divestment: event({investor: indexed(address), eth_divested: indexed(uint256), t
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
 Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
 
-total_shares: public(uint256)                       # total share supply
+total_shares: uint256                               # total share supply
 shares: uint256[address]                            # share balance of an address
 share_allowances: (uint256[address])[address]       # share allowance of one adddress on another
-factory: public(address)                            # the factory that created this exchange
+factory: address                                    # the factory that created this exchange
 token: address(ERC20)                               # the ERC20 token traded on this exchange
 
 # Called by factory during launch
@@ -29,6 +29,7 @@ def setup(_token: address) -> bool:
     self.factory = msg.sender
     self.token = _token
     assert self.factory != 0x0000000000000000000000000000000000000000
+    assert self.token != 0x0000000000000000000000000000000000000000
     return True
 
 # Sets initial token pool, ETH pool, and share amount
@@ -42,8 +43,8 @@ def initialize(tokens_invested: uint256) -> bool:
     eth_invested: uint256 = convert(msg.value, 'uint256')
     assert eth_invested >= convert(100000000, 'uint256')
     assert tokens_invested >= convert(100000000, 'uint256')
-    assert Factory(self.factory).token_to_exchange_lookup(self.token) == self
-    initial_shares: uint256 = eth_invested / convert(100000, 'uint256')
+    assert Factory(self.factory).get_token_to_exchange(self.token) == self
+    initial_shares: uint256 = convert(self.balance, 'uint256')
     self.total_shares = initial_shares
     self.shares[msg.sender] = initial_shares
     self.token.transferFrom(msg.sender, self, tokens_invested)
@@ -54,6 +55,7 @@ def initialize(tokens_invested: uint256) -> bool:
     return True
 
 @private
+@constant
 def eth_to_tokens_all(eth_sold: uint256) -> uint256:
     assert self.total_shares > convert(0, 'uint256')
     assert eth_sold > convert(0, 'uint256')
@@ -80,8 +82,7 @@ def swap_eth_to_tokens_all(min_tokens_bought: uint256, timeout: uint256) -> bool
 @payable
 def pay_eth_to_tokens_all(recipent: address, min_tokens_bought: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
-    assert recipent != 0x0000000000000000000000000000000000000000
-    assert recipent != self
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
     eth_sold: uint256 = convert(msg.value, 'uint256')
     tokens_purchased: uint256 = self.eth_to_tokens_all(eth_sold)
     assert tokens_purchased >= min_tokens_bought
@@ -90,6 +91,7 @@ def pay_eth_to_tokens_all(recipent: address, min_tokens_bought: uint256, timeout
     return True
 
 @private
+@constant
 def eth_to_tokens_exact(tokens_bought: uint256, max_eth: uint256) -> uint256:
     assert self.total_shares > convert(0, 'uint256')
     assert tokens_bought > convert(0, 'uint256')
@@ -121,9 +123,8 @@ def swap_eth_to_tokens_exact(tokens_bought: uint256, timeout: uint256) -> bool:
 @payable
 def pay_eth_to_tokens_exact(recipent: address, tokens_bought: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
     assert msg.value > 0
-    assert recipent != 0x0000000000000000000000000000000000000000
-    assert recipent != self
     max_eth: uint256 = convert(msg.value, 'uint256')
     eth_required_with_fee: uint256 = self.eth_to_tokens_exact(tokens_bought, max_eth)
     eth_refund: uint256 = max_eth - eth_required_with_fee
@@ -133,6 +134,7 @@ def pay_eth_to_tokens_exact(recipent: address, tokens_bought: uint256, timeout: 
     return True
 
 @private
+@constant
 def tokens_to_eth_all(tokens_sold: uint256) -> uint256:
     assert self.total_shares > convert(0, 'uint256')
     assert tokens_sold > convert(0, 'uint256')
@@ -157,8 +159,7 @@ def swap_tokens_to_eth_all(tokens_sold: uint256, min_eth_bought: uint256, timeou
 @public
 def pay_tokens_to_eth_all(recipent: address, tokens_sold: uint256, min_eth_bought: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
-    assert recipent != 0x0000000000000000000000000000000000000000
-    assert recipent != self
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
     eth_purchased: uint256 = self.tokens_to_eth_all(tokens_sold)
     assert eth_purchased >= min_eth_bought
     send(recipent, as_wei_value(convert(eth_purchased, 'int128'), 'wei'))
@@ -167,6 +168,7 @@ def pay_tokens_to_eth_all(recipent: address, tokens_sold: uint256, min_eth_bough
     return True
 
 @private
+@constant
 def tokens_to_eth_exact(eth_bought: uint256) -> uint256:
     assert self.total_shares > convert(0, 'uint256')
     assert eth_bought > convert(0, 'uint256')
@@ -193,10 +195,9 @@ def swap_tokens_to_eth_exact(eth_bought: uint256, max_tokens_sold: uint256, time
 # Converts tokens to an exact amount of ETH, recipent recieves ETH
 @public
 def pay_tokens_to_eth_exact(recipent: address, eth_bought: uint256, max_tokens_sold: uint256, timeout: uint256) -> bool:
-    assert recipent != 0x0000000000000000000000000000000000000000
-    assert recipent != self
-    assert max_tokens_sold > convert(0, 'uint256')
     assert timeout > convert(block.timestamp, 'uint256')
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
+    assert max_tokens_sold > convert(0, 'uint256')
     tokens_required_with_fee: uint256 = self.tokens_to_eth_exact(eth_bought)
     assert max_tokens_sold >= tokens_required_with_fee
     self.token.transferFrom(msg.sender, self, tokens_required_with_fee)
@@ -210,11 +211,11 @@ def swap_tokens_to_tokens_all(token_addr: address, tokens_sold: uint256, min_tok
     assert timeout > convert(block.timestamp, 'uint256')
     assert min_tokens_bought > convert(0, 'uint256')
     assert token_addr != self.token
-    exchange: address = Factory(self.factory).token_to_exchange_lookup(token_addr)
+    exchange: address = Factory(self.factory).get_token_to_exchange(token_addr)
     assert exchange != 0x0000000000000000000000000000000000000000
     eth_purchased: uint256 = self.tokens_to_eth_all(tokens_sold)
     self.token.transferFrom(msg.sender, self, tokens_sold)
-    assert Exchange(exchange).pay_eth_to_tokens_all(msg.sender, min_tokens_bought, timeout, value=as_wei_value(convert(eth_purchased, 'int128'), 'wei')) == True
+    assert Exchange(exchange).pay_eth_to_tokens_all(msg.sender, min_tokens_bought, timeout, value=as_wei_value(convert(eth_purchased, 'int128'), 'wei'))
     log.TokenToEth(msg.sender, tokens_sold, eth_purchased)
     return True
 
@@ -222,13 +223,14 @@ def swap_tokens_to_tokens_all(token_addr: address, tokens_sold: uint256, min_tok
 @public
 def pay_tokens_to_tokens_all(token_addr: address, recipent: address, tokens_sold: uint256, min_tokens_bought: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
     assert min_tokens_bought > convert(0, 'uint256')
     assert token_addr != self.token
-    exchange: address = Factory(self.factory).token_to_exchange_lookup(token_addr)
+    exchange: address = Factory(self.factory).get_token_to_exchange(token_addr)
     assert exchange != 0x0000000000000000000000000000000000000000
     eth_purchased: uint256 = self.tokens_to_eth_all(tokens_sold)
     self.token.transferFrom(msg.sender, self, tokens_sold)
-    assert Exchange(exchange).pay_eth_to_tokens_all(recipent, min_tokens_bought, timeout, value=as_wei_value(convert(eth_purchased, 'int128'), 'wei')) == True
+    assert Exchange(exchange).pay_eth_to_tokens_all(recipent, min_tokens_bought, timeout, value=as_wei_value(convert(eth_purchased, 'int128'), 'wei'))
     log.TokenToEth(msg.sender, tokens_sold, eth_purchased)
     return True
 
@@ -238,7 +240,7 @@ def swap_tokens_to_tokens_exact(token_addr: address, tokens_bought: uint256, max
     assert timeout > convert(block.timestamp, 'uint256')
     assert max_tokens_sold > convert(0, 'uint256')
     assert token_addr != self.token
-    exchange: address = Factory(self.factory).token_to_exchange_lookup(token_addr)
+    exchange: address = Factory(self.factory).get_token_to_exchange(token_addr)
     assert exchange != 0x0000000000000000000000000000000000000000
     eth_pool_output: uint256 = convert(exchange.balance, 'uint256')
     token_pool_output: uint256 = Token(token_addr).balanceOf(exchange)
@@ -249,7 +251,7 @@ def swap_tokens_to_tokens_exact(token_addr: address, tokens_bought: uint256, max
     tokens_required_with_fee: uint256 = self.tokens_to_eth_exact(eth_required_with_fee_output)
     self.token.transferFrom(msg.sender, self, tokens_required_with_fee)
     wei_bought: wei_value = as_wei_value(convert(eth_required_with_fee_output, 'int128'), 'wei')
-    assert Exchange(exchange).pay_eth_to_tokens_all(msg.sender, 1, timeout, value=wei_bought) == True
+    assert Exchange(exchange).pay_eth_to_tokens_all(msg.sender, 1, timeout, value=wei_bought)
     log.TokenToEth(msg.sender, tokens_required_with_fee, eth_required_with_fee_output)
     return True
 
@@ -257,11 +259,10 @@ def swap_tokens_to_tokens_exact(token_addr: address, tokens_bought: uint256, max
 @public
 def pay_tokens_to_tokens_exact(token_addr: address, recipent: address, tokens_bought: uint256, max_tokens_sold: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
+    assert recipent != self and recipent != 0x0000000000000000000000000000000000000000
     assert max_tokens_sold > convert(0, 'uint256')
-    assert recipent != 0x0000000000000000000000000000000000000000
-    assert recipent != self
     assert token_addr != self.token
-    exchange: address = Factory(self.factory).token_to_exchange_lookup(token_addr)
+    exchange: address = Factory(self.factory).get_token_to_exchange(token_addr)
     assert exchange != 0x0000000000000000000000000000000000000000
     eth_pool_out: uint256 = convert(exchange.balance, 'uint256')
     token_pool_out: uint256 = Token(token_addr).balanceOf(exchange)
@@ -272,7 +273,7 @@ def pay_tokens_to_tokens_exact(token_addr: address, recipent: address, tokens_bo
     tokens_required_with_fee: uint256 = self.tokens_to_eth_exact(eth_required_with_fee_out)
     self.token.transferFrom(msg.sender, self, tokens_required_with_fee)
     wei_bought: wei_value = as_wei_value(convert(eth_required_with_fee_out, 'int128'), 'wei')
-    assert Exchange(exchange).pay_eth_to_tokens_all(recipent, 1, timeout, value=wei_bought) == True
+    assert Exchange(exchange).pay_eth_to_tokens_all(recipent, 1, timeout, value=wei_bought)
     log.TokenToEth(msg.sender, tokens_required_with_fee, eth_required_with_fee_out)
     return True
 
@@ -284,8 +285,7 @@ def pay_tokens_to_tokens_exact(token_addr: address, recipent: address, tokens_bo
 def invest(min_shares: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
     share_total: uint256 = self.total_shares
-    assert share_total > convert(0, 'uint256')
-    assert min_shares > convert(0, 'uint256')
+    assert share_total > convert(0, 'uint256') and min_shares > convert(0, 'uint256')
     eth_invested: uint256 = convert(msg.value, 'uint256')
     assert eth_invested > convert(0, 'uint256')
     eth_pool: uint256 = convert(self.balance, 'uint256')  - eth_invested
@@ -306,21 +306,15 @@ def invest(min_shares: uint256, timeout: uint256) -> bool:
 def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeout: uint256) -> bool:
     assert timeout > convert(block.timestamp, 'uint256')
     share_total: uint256 = self.total_shares
-    assert share_total > convert(0, 'uint256')
-    assert shares_burned > convert(0, 'uint256')
-    assert min_eth > convert(0, 'uint256')
-    assert min_tokens > convert(0, 'uint256')
+    assert share_total > convert(0, 'uint256') and shares_burned > convert(0, 'uint256')
+    assert min_eth > convert(0, 'uint256') and min_tokens > convert(0, 'uint256')
     eth_pool: uint256 = convert(self.balance, 'uint256')
     token_pool: uint256 = Token(self.token).balanceOf(self)
     eth_divested: uint256 = (shares_burned * eth_pool) / share_total
     tokens_divested: uint256 = (shares_burned * token_pool) / share_total
-    assert eth_divested > min_eth
-    assert tokens_divested > min_tokens
+    assert eth_divested > min_eth and tokens_divested > min_tokens
     self.shares[msg.sender] = self.shares[msg.sender] - shares_burned
     self.total_shares = share_total - shares_burned
-    if self.total_shares != convert(0, 'uint256'):
-        assert convert(self.balance, 'uint256') != convert(0, 'uint256')
-        assert Token(self.token).balanceOf(self) != convert(0, 'uint256')
     self.token.transfer(msg.sender, tokens_divested)
     send(msg.sender, as_wei_value(convert(eth_divested, 'int128'), 'wei'))
     log.Divestment(msg.sender, eth_divested, tokens_divested)
@@ -328,7 +322,12 @@ def divest(shares_burned: uint256, min_eth: uint256, min_tokens: uint256, timeou
 
 @public
 @constant
-def get_exchange_token() -> address:
+def getFactoryAddress() -> address:
+    return self.factory
+
+@public
+@constant
+def getTokenAddress() -> address:
     return self.token
 
 # ERC20 compatibility for exchange shares modified from

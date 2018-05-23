@@ -32,7 +32,7 @@ def test_pay_eth_to_tokens_all(t, chain, utils, uni_token, uniswap_factory, uni_
     assert uni_token.balanceOf(t.a3) == 0
     assert chain.head_state.get_balance(t.a3) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_token_exchange.pay_eth_to_tokens_all(t.a3, 1, timeout, value=1*10**18, startgas=65110, sender=t.k2)
+    uni_token_exchange.pay_eth_to_tokens_all(t.a3, 1, timeout, value=1*10**18, startgas=64750, sender=t.k2)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_token_exchange.address) == 6*10**18
     assert uni_token.balanceOf(uni_token_exchange.address) == 8336112037345781927
