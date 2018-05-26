@@ -1,6 +1,9 @@
 ## Whitepaper
 https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
 
+## Email
+hayden@uniswap.io
+
 ## Installation: (will be improved soon)
 
 #### Tested in macOS High Sierra
