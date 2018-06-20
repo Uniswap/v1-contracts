@@ -4,7 +4,7 @@ https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
 ## Email
 hayden@uniswap.io
 
-## Installation: (will be improved soon)
+## Installation:
 
 #### Tested in macOS High Sierra
 
@@ -37,7 +37,6 @@ $ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
 $ pip install scrypt
 $ git clone https://github.com/ethereum/vyper.git
 $ cd vyper
-$ git reset --hard 89ef7c38e4678b7a49ff1da82bf1045638ce0f12
 $ make
 $ make test
 $ cd ..
@@ -47,6 +46,7 @@ $ cd ..
 ```
 $ pip install pytest
 $ pip install ethereum
+$ pip install 'rlp==0.6.0'
 ```
 
 6) Run tests

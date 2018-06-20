@@ -81,7 +81,6 @@ def t():
 
 @pytest.fixture(scope="module")
 def chain():
-    tester.languages['vyper'] = compiler.Compiler()
     s = tester.Chain()
     s.head_state.gas_limit = 10**9
     return s
@@ -90,15 +89,6 @@ def chain():
 @pytest.fixture
 def utils():
     return ethereum_utils
-
-
-@pytest.fixture
-def get_contract_from_lll(t):
-    def lll_compiler(lll):
-        lll = optimizer.optimize(LLLnode.from_list(lll))
-        byte_code = compile_lll.assembly_to_evm(compile_lll.compile_to_assembly(lll))
-        t.s.tx(to=b'', data=byte_code)
-    return lll_compiler
 
 
 @pytest.fixture
@@ -155,14 +145,6 @@ def assert_tx_failed(t):
 
 
 @pytest.fixture
-def assert_compile_failed(get_contract_from_lll):
-    def assert_compile_failed(function_to_test, exception=tester.TransactionFailed):
-        with pytest.raises(exception):
-            function_to_test()
-    return assert_compile_failed
-
-
-@pytest.fixture
 def get_logs():
     def get_logs(receipt, contract, event_name=None):
         contract_log_ids = contract.translator.event_data.keys()  # All the log ids contract has
@@ -197,28 +179,24 @@ def exchange_abi(chain):
 @pytest.fixture
 def uniswap_exchange(t, chain):
     chain.mine()
-    t.languages['vyper'] = compiler.Compiler()
     return chain.contract(EXCHANGE_CODE, language='vyper')
 
 
 @pytest.fixture
 def uni_token(t, chain):
     chain.mine()
-    t.languages['vyper'] = compiler.Compiler()
     return chain.contract(ERC20_CODE, language='vyper', args=["UNI Token", "UNI", 18, 100000*10**18])
 
 
 @pytest.fixture
 def swap_token(t, chain):
     chain.mine()
-    t.languages['vyper'] = compiler.Compiler()
     return chain.contract(ERC20_CODE, language='vyper', args=["SWAP Token", "SWAP", 18, 100000*10**18])
 
 
 @pytest.fixture
 def uniswap_factory(t, chain, uniswap_exchange):
     chain.mine()
-    t.languages['vyper'] = compiler.Compiler()
     return chain.contract(FACTORY_CODE, language='vyper', args=[uniswap_exchange.address])
 
 

@@ -17,7 +17,7 @@ def test_swap_tokens_to_tokens_all(t, chain, utils, uni_token, swap_token, unisw
     assert swap_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_token_exchange.swap_tokens_to_tokens_all(swap_token.address, 2*10**18, 1, timeout, startgas=115000, sender=t.k1)
+    uni_token_exchange.swap_tokens_to_tokens_all(swap_token.address, 2*10**18, 1, timeout, startgas=110000, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_token_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_token_exchange.address) == 12*10**18
