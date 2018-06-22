@@ -1,14 +1,16 @@
 def test_initialize(t, chain, utils, uni_token, uniswap_factory, uni_token_exchange, assert_tx_failed):
-    assert uniswap_factory.get_token_to_exchange(uni_token.address) == uni_token_exchange.address
+    assert uniswap_factory.get_exchange(uni_token.address) == uni_token_exchange.address
     uni_token.approve(uni_token_exchange.address, 100*10**18)
-    uni_token_exchange.initialize(10*10**18, value=5*10**18)
+    uni_token_exchange.initialize(10*10**18, value=5*10**18, startgas=110950)
+    # uni_token_exchange.initialize(10*10**18, value=5*10**18, startgas=108800)
+    # uni_token_exchange.initialize(10*10**18, value=5*10**18, startgas=106650)
     assert chain.head_state.get_balance(uni_token_exchange.address) == 5*10**18
     assert uni_token.balanceOf(uni_token_exchange.address) == 10*10**18
-    assert utils.remove_0x_head(uni_token_exchange.getTokenAddress()) == uni_token.address.hex()
-    assert utils.remove_0x_head(uni_token_exchange.getFactoryAddress()) == uniswap_factory.address.hex()
+    assert utils.remove_0x_head(uni_token_exchange.token_address()) == uni_token.address.hex()
+    assert utils.remove_0x_head(uni_token_exchange.factory_address()) == uniswap_factory.address.hex()
     assert uni_token_exchange.totalSupply() == 5*10**18
     assert uni_token_exchange.balanceOf(t.a0) == 5*10**18
-
+#
 def test_invest_divest(t, chain, utils, uni_token, uniswap_factory, uni_token_exchange, assert_tx_failed):
     uni_token.transfer(t.a1, 10*10**18)
     uni_token.approve(uni_token_exchange.address, 100*10**18)

@@ -23,10 +23,10 @@ def launch_exchange(_token: address) -> address:
 
 @public
 @constant
-def get_token_to_exchange(_token: address) -> address:
+def get_exchange(_token: address) -> address:
     return self.token_to_exchange[_token]
 
 @public
 @constant
-def get_exchange_to_token(_exchange: address) -> address:
+def get_token(_exchange: address) -> address:
     return self.exchange_to_token[_exchange]
