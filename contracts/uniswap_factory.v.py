@@ -13,7 +13,7 @@ def __init__(_template: address):
 
 @public
 def launch_exchange(_token: address) -> address:
-    assert self.token_to_exchange[_token] == 0x0000000000000000000000000000000000000000
+    assert self.token_to_exchange[_token] == ZERO_ADDRESS
     _exchange: address = create_with_code_of(self.exchange_template)
     assert Exchange(_exchange).setup(_token)
     self.token_to_exchange[_token] = _exchange
