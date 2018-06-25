@@ -43,14 +43,14 @@ def initialize(tokens_invested: uint256) -> bool:
     assert msg.value >= 1000000000 and tokens_invested >= 1000000000
     assert Factory(factory_addr).get_exchange(token_addr) == self
     initial_eth: uint256 = as_unitless_number(self.balance)
-    # initial_tokens: uint256 = self.token.balanceOf(self)
     self.total_shares = initial_eth
     self.shares[msg.sender] = initial_eth
+    # initial_tokens: uint256 = self.token.balanceOf(self)
     self.token.transferFrom(msg.sender, self, tokens_invested)
-    log.Investment(msg.sender, msg.value, tokens_invested)
     # Safer than assert transferFrom() because not all ERC20 transferFrom() implementations return bools
     # assert self.token.balanceOf(self) == initial_tokens + tokens_invested
     assert self.total_shares > 0 and self.balance > 0
+    log.Investment(msg.sender, msg.value, tokens_invested)
     return True
 
 @private
