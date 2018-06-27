@@ -11,7 +11,7 @@ def test_swap_tokens_to_eth_all(t, chain, utils, uni_token, exchange_factory, un
     assert uni_token.balanceOf(t.a1) == 2*10**18
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.swap_tokens_to_eth_all(2*10**18, 1, timeout, sender=t.k1)
+    uni_exchange.swap_tokens_to_eth(2*10**18, 1, timeout, False, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_exchange.address) == 12*10**18
@@ -35,7 +35,7 @@ def test_pay_tokens_to_eth_all(t, chain, utils, uni_token, exchange_factory, uni
     assert uni_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.pay_tokens_to_eth_all(t.a2, 2*10**18, 1, timeout, sender=t.k1)
+    uni_exchange.pay_tokens_to_eth(t.a2, 2*10**18, 1, timeout, False, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_exchange.address) == 12*10**18
@@ -59,7 +59,7 @@ def test_swap_tokens_to_eth_exact(t, chain, utils, uni_token, exchange_factory, 
     assert uni_token.balanceOf(t.a1) == 3*10**18
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.swap_tokens_to_eth_exact(831943981327109037, 3*10**18, timeout, sender=t.k1)
+    uni_exchange.swap_tokens_to_eth(3*10**18, 831943981327109037, timeout, True, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_exchange.address) == 12*10**18 + 1         # Exchange gets 1 more token due to fee rounding
@@ -83,7 +83,7 @@ def test_pay_tokens_to_eth_exact(t, chain, utils, uni_token, exchange_factory, u
     assert uni_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.pay_tokens_to_eth_exact(t.a2, 831943981327109037, 3*10**18, timeout, sender=t.k1)
+    uni_exchange.pay_tokens_to_eth(t.a2, 3*10**18, 831943981327109037, timeout, True, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_exchange.address) == 12*10**18 + 1
