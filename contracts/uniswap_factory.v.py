@@ -1,5 +1,5 @@
 contract Exchange():
-    def setup(_token: address) -> bool: modifying
+    def setup(token_addr: address) -> bool: modifying
 
 NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
