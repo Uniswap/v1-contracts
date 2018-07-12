@@ -2,8 +2,8 @@ contract Factory():
     def getExchange(token_addr: address) -> address: constant
 
 contract Exchange():
-    def tokenToEthSwap(token_amount: uint256, eth_amount: uint256, deadline: uint256, exact_output: bool) -> uint256(wei): modifying
-    def ethToTokenTransfer(recipent: address, token_amount: uint256, deadline: uint256, exact_output: bool) -> uint256: modifying
+    def tokenToEthSwap(token_amount: uint256, eth_amount: uint256, deadline: uint256) -> uint256(wei): modifying
+    def ethToTokenTransfer(recipent: address, token_amount: uint256, deadline: uint256) -> uint256: modifying
 
 contract Token():
     def transferFrom(_from : address, _to : address, _value : uint256) -> bool: modifying
@@ -50,9 +50,9 @@ def tokenToTokenSwap(
     output_exchange: address = self.token_to_exchange[output_token]
     assert input_exchange != ZERO_ADDRESS and output_exchange != ZERO_ADDRESS
     assert Token(input_token).transferFrom(msg.sender, self, input_amount)
-    eth_bought: uint256(wei) = Exchange(input_exchange).tokenToEthSwap(input_amount, 1, deadline, False)
+    eth_bought: uint256(wei) = Exchange(input_exchange).tokenToEthSwap(input_amount, 1, deadline)
     assert eth_bought > 0
-    output_tokens_bought: uint256 =  Exchange(output_exchange).ethToTokenTransfer(msg.sender, min_output_amount, deadline, False, value=eth_bought)
+    output_tokens_bought: uint256 =  Exchange(output_exchange).ethToTokenTransfer(msg.sender, min_output_amount, deadline, value=eth_bought)
     assert output_tokens_bought > min_output_amount
     return output_tokens_bought
 
@@ -67,8 +67,8 @@ def tokenToExchangeSwap(
     input_exchange: address = self.token_to_exchange[input_token]
     assert input_token != ZERO_ADDRESS and output_exchange != ZERO_ADDRESS
     assert Token(input_token).transferFrom(msg.sender, self, input_amount)
-    eth_bought: uint256(wei) = Exchange(input_exchange).tokenToEthSwap(input_amount, 1, deadline, False)
+    eth_bought: uint256(wei) = Exchange(input_exchange).tokenToEthSwap(input_amount, 1, deadline)
     assert eth_bought > 0
-    output_tokens_bought: uint256 =  Exchange(output_exchange).ethToTokenTransfer(msg.sender, min_output_amount, deadline, False, value=eth_bought)
+    output_tokens_bought: uint256 =  Exchange(output_exchange).ethToTokenTransfer(msg.sender, min_output_amount, deadline, value=eth_bought)
     assert output_tokens_bought > min_output_amount
     return output_tokens_bought
