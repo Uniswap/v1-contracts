@@ -94,29 +94,30 @@ def get_last_log(get_logs):
 
 @pytest.fixture
 def exchange_abi(chain):
+    chain.mine()
     return tester.languages['vyper'].mk_full_signature(EXCHANGE_CODE)
 
 
 @pytest.fixture
-def uniswap_exchange(t, chain):
+def uniswap_exchange(chain):
     chain.mine()
     return chain.contract(EXCHANGE_CODE, language='vyper')
 
 
 @pytest.fixture
-def uni_token(t, chain):
+def uni_token(chain):
     chain.mine()
     return chain.contract(ERC20_CODE, language='vyper', args=["UNI Token", "UNI", 18, 100000*10**18])
 
 
 @pytest.fixture
-def swap_token(t, chain):
+def swap_token(chain):
     chain.mine()
     return chain.contract(ERC20_CODE, language='vyper', args=["SWAP Token", "SWAP", 18, 100000*10**18])
 
 
 @pytest.fixture
-def exchange_factory(t, chain, uniswap_exchange):
+def exchange_factory(chain, uniswap_exchange):
     chain.mine()
     return chain.contract(FACTORY_CODE, language='vyper', args=[uniswap_exchange.address])
 
