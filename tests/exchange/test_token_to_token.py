@@ -48,8 +48,8 @@ def test_swap_exact(t, chain, utils, uni_token, swap_token, exchange_factory, un
     assert swap_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.tokenToTokenSwapExact(swap_token.address, 3*10**18, 2848165371366673513, timeout, startgas=111950, sender=t.k1)
-    # uni_exchange.swap_tokens_to_tokens_exact(swap_token.address, 2848165371366673513, 3*10**18, timeout, startgas=116050, sender=t.k1)
+    # uni_exchange.tokenToTokenSwapExact(swap_token.address, 3*10**18, 2848165371366673513, timeout, startgas=111491, sender=t.k1)
+    uni_exchange.tokenToTokenSwapExact(swap_token.address, 3*10**18, 2848165371366673513, timeout, startgas=116650, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 4168056018672890963
     assert uni_token.balanceOf(uni_exchange.address) == 12*10**18 + 1

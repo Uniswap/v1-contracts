@@ -16,6 +16,7 @@ def setup(template: address):
 
 @public
 def launchExchange(token: address) -> address:
+    assert token != ZERO_ADDRESS
     assert self.exchange_template != ZERO_ADDRESS
     assert self.token_to_exchange[token] == ZERO_ADDRESS
     exchange: address = create_with_code_of(self.exchange_template)
