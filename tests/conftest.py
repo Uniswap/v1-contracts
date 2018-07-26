@@ -119,7 +119,9 @@ def swap_token(chain):
 @pytest.fixture
 def exchange_factory(chain, uniswap_exchange):
     chain.mine()
-    return chain.contract(FACTORY_CODE, language='vyper', args=[uniswap_exchange.address])
+    factory_contract = chain.contract(FACTORY_CODE, language='vyper')
+    factory_contract.setup(uniswap_exchange.address)
+    return factory_contract
 
 
 @pytest.fixture

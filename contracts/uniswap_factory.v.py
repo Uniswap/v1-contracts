@@ -7,29 +7,33 @@ exchange_template: address
 token_to_exchange: address[address]
 exchange_to_token: address[address]
 
+# sets the factory
 @public
-def __init__(_template: address):
-    self.exchange_template = _template
+def setup(template: address):
+    assert self.exchange_template == ZERO_ADDRESS
+    assert template != ZERO_ADDRESS
+    self.exchange_template = template
 
 @public
-def launchExchange(_token: address) -> address:
-    assert self.token_to_exchange[_token] == ZERO_ADDRESS
-    _exchange: address = create_with_code_of(self.exchange_template)
-    assert Exchange(_exchange).setup(_token)
-    self.token_to_exchange[_token] = _exchange
-    self.exchange_to_token[_exchange] = _token
-    log.NewExchange(_token, _exchange)
-    return _exchange
+def launchExchange(token: address) -> address:
+    assert self.exchange_template != ZERO_ADDRESS
+    assert self.token_to_exchange[token] == ZERO_ADDRESS
+    exchange: address = create_with_code_of(self.exchange_template)
+    assert Exchange(exchange).setup(token)
+    self.token_to_exchange[token] = exchange
+    self.exchange_to_token[exchange] = token
+    log.NewExchange(token, exchange)
+    return exchange
 
 @public
 @constant
-def getExchange(_token: address) -> address:
-    return self.token_to_exchange[_token]
+def getExchange(token: address) -> address:
+    return self.token_to_exchange[token]
 
 @public
 @constant
-def getToken(_exchange: address) -> address:
-    return self.exchange_to_token[_exchange]
+def getToken(exchange: address) -> address:
+    return self.exchange_to_token[exchange]
 
 @public
 @constant

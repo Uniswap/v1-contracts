@@ -9,7 +9,9 @@ def test_swap_default(t, chain, utils, uni_token, exchange_factory, uni_exchange
     assert uni_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    chain.tx(to=uni_exchange.address, startgas=63450, value=1*10**18, sender=t.k1)
+    # chain.tx(to=uni_exchange.address, startgas=60388, value=1*10**18, sender=t.k1)
+    chain.tx(to=uni_exchange.address, startgas=59931, value=1*10**18, sender=t.k1)
+    # chain.tx(to=uni_exchange.address, startgas=63450, value=1*10**18, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 6*10**18
     assert uni_token.balanceOf(uni_exchange.address) == 8336112037345781927
@@ -28,15 +30,14 @@ def test_swap_all(t, chain, utils, uni_token, exchange_factory, uni_exchange, as
     assert uni_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    # uni_exchange.eth_to_token_swap_all(1, timeout, value=1*10**18, startgas=63081, sender=t.k1)
-    assert uni_exchange.ethToTokenSwap(1, timeout, value=1*10**18, startgas=63381, sender=t.k1) == 1663887962654218073
+    assert uni_exchange.ethToTokenSwap(1, timeout, value=1*10**18, startgas=62777, sender=t.k1) == 1663887962654218073
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(uni_exchange.address) == 6*10**18
     assert uni_token.balanceOf(uni_exchange.address) == 8336112037345781927
     # Updated balances of BUYER
     assert uni_token.balanceOf(t.a1) == 1663887962654218073
     assert chain.head_state.get_balance(t.a1) == 1*10**24 - 1*10**18
-
+#
 def test_swap_exact(t, chain, utils, uni_token, exchange_factory, uni_exchange, assert_tx_failed):
     timeout = chain.head_state.timestamp + 300
     uni_token.approve(uni_exchange.address, 10*10**18)

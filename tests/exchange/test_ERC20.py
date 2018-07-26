@@ -10,6 +10,6 @@ def test_ERC20(t, chain, utils, uni_token, assert_tx_failed):
     assert uni_token.decimals() == 18
     assert uni_token.totalSupply() == 100000*10**18
     assert uni_token.balanceOf(t.a0) == 100000*10**18
-    uni_token.transfer(t.a1, 1*10**18)
+    uni_token.transfer(t.a1, 1*10**18, startgas=51875)
     assert uni_token.balanceOf(t.a0) == 100000*10**18 - 1*10**18
     assert uni_token.balanceOf(t.a1) == 1*10**18
