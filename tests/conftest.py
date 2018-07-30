@@ -1,17 +1,13 @@
 import os
 import pytest
-from functools import wraps
 
 from ethereum.tools import tester
-from vyper.parser.parser_utils import (
-    LLLnode
-)
+from ethereum import utils as ethereum_utils
 from vyper import (
     compile_lll,
     optimizer,
     compiler,
 )
-from ethereum import utils as ethereum_utils
 
 '''
 run tests with:             python -m pytest -v

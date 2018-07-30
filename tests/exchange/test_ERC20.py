@@ -4,7 +4,7 @@ def pad_bytes32(instr):
     return bstr + (32 - len(bstr)) * b'\x00'
 
 
-def test_ERC20(t, chain, utils, uni_token, assert_tx_failed):
+def test_ERC20(t, uni_token):
     assert uni_token.name() == pad_bytes32('UNI Token')
     assert uni_token.symbol() == pad_bytes32('UNI')
     assert uni_token.decimals() == 18

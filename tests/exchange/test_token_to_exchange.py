@@ -1,4 +1,4 @@
-def test_transfer_all(t, chain, utils, uni_token, swap_token, exchange_factory, uni_exchange, swap_exchange, assert_tx_failed):
+def test_transfer_all(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
     timeout = chain.head_state.timestamp + 300
     uni_token.transfer(t.a1, 3*10**18)
     uni_token.approve(uni_exchange.address, 10*10**18)
@@ -37,7 +37,7 @@ def test_transfer_all(t, chain, utils, uni_token, swap_token, exchange_factory, 
     assert swap_token.balanceOf(t.a2) == 2848165371366673513
     assert chain.head_state.get_balance(t.a2) == 1*10**24
 
-def test_transfer_exact(t, chain, utils, uni_token, swap_token, exchange_factory, uni_exchange, swap_exchange, assert_tx_failed):
+def test_transfer_exact(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
     timeout = chain.head_state.timestamp + 300
     uni_token.transfer(t.a1, 3*10**18)
     uni_token.approve(uni_exchange.address, 10*10**18)
