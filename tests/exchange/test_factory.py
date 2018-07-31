@@ -1,14 +1,14 @@
 def test_factory(t, chain, utils, exchange_abi, uniswap_exchange, uni_token, exchange_factory, assert_tx_failed):
     # chain.mine()
     assert utils.remove_0x_head(exchange_factory.exchangeTemplate()) == uniswap_exchange.address.hex()
-    exchange_address = exchange_factory.launchExchange(uni_token.address, startgas=155000)
+    exchange_address = exchange_factory.createExchange(uni_token.address, startgas=155000)
     uni_exchange = t.ABIContract(chain, exchange_abi, exchange_address)
     assert exchange_factory.getExchange(uni_token.address) == exchange_address
     assert utils.remove_0x_head(exchange_factory.getToken(uni_exchange.address)) == uni_token.address.hex()
     # Can't call setup on factory twice
     assert_tx_failed(lambda: exchange_factory.setup(uniswap_exchange.address))
     # Exchange already exists
-    assert_tx_failed(lambda: exchange_factory.launchExchange(uni_token.address))
+    assert_tx_failed(lambda: exchange_factory.createExchange(uni_token.address))
     # Can't call setup on exchange
     assert_tx_failed(lambda: uni_exchange.setup(exchange_factory.address))
     # Exchange initial state

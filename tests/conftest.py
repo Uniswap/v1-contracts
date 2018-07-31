@@ -123,12 +123,12 @@ def exchange_factory(chain, uniswap_exchange):
 @pytest.fixture
 def uni_exchange(t, chain, exchange_factory, exchange_abi, uni_token):
     chain.mine()
-    uni_exchange_address = exchange_factory.launchExchange(uni_token.address)
+    uni_exchange_address = exchange_factory.createExchange(uni_token.address)
     return t.ABIContract(chain, exchange_abi, uni_exchange_address)
 
 
 @pytest.fixture
 def swap_exchange(t, chain, exchange_factory, exchange_abi, swap_token):
     chain.mine()
-    swap_exchange_address = exchange_factory.launchExchange(swap_token.address)
+    swap_exchange_address = exchange_factory.createExchange(swap_token.address)
     return t.ABIContract(chain, exchange_abi, swap_exchange_address)
