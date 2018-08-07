@@ -16,7 +16,8 @@ def test_add_liquidity(t, chain, utils, uni_token, exchange_factory, uni_exchang
     # Throw exception if not enough gas is provided
     assert_tx_failed(lambda: uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18, startgas=25000))
     # Liquidity provider (t.a0) adds liquidity
-    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18, startgas=110950)
+    # uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18, startgas=110950)
+    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
     assert chain.head_state.get_balance(uni_exchange.address) == 5*10**18
     assert uni_token.balanceOf(uni_exchange.address) == 10*10**18
     assert uni_exchange.totalSupply() == 5*10**18

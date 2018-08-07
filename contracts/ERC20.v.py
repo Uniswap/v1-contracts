@@ -23,7 +23,7 @@ def __init__(_name: bytes32, _symbol: bytes32, _decimals: uint256, _supply: uint
     self.balances[_sender] = _supply
     self.total_supply = _supply
     # Fire deposit event as transfer from 0x0
-    log.Transfer(0x0000000000000000000000000000000000000000, _sender, _supply)
+    log.Transfer(ZERO_ADDRESS, _sender, _supply)
 
 @public
 @payable
@@ -33,7 +33,7 @@ def deposit():
     self.balances[_sender] = self.balances[_sender] + _value
     self.total_supply = self.total_supply + _value
     # Fire deposit event as transfer from 0x0
-    log.Transfer(0x0000000000000000000000000000000000000000, _sender, _value)
+    log.Transfer(ZERO_ADDRESS, _sender, _value)
 
 @public
 def withdraw(_value : uint256(wei)) -> bool:
@@ -44,7 +44,7 @@ def withdraw(_value : uint256(wei)) -> bool:
     self.total_supply = self.total_supply - _value
     send(_sender, _value)
     # Fire withdraw event as transfer to 0x0
-    log.Transfer(_sender, 0x0000000000000000000000000000000000000000, _value)
+    log.Transfer(_sender, ZERO_ADDRESS, _value)
     return True
 
 @public
