@@ -8,7 +8,7 @@ hayden@uniswap.io
 
 #### Tested in macOS High Sierra
 
-1) Install python 3 and upgrade pip (requires [Homebrew](https://brew.sh/))
+1) Install Python 3 and upgrade pip (requires [Homebrew](https://brew.sh/))
 ```
 $ xcode-select --install (if needed)
 $ brew install python3
@@ -22,19 +22,18 @@ $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
 ```
 
-3) Setup virtual environment (recommended)
+3) Setup virtual environment
 ```
 $ pip3 install --upgrade pip
 $ pip3 install virtualenv
-$ virtualenv uniswap_env
-$ source uniswap_env/bin/activate
+$ virtualenv env
+$ source env/bin/activate
 ```
 
 4) [Install Vyper](https://vyper.readthedocs.io/en/latest/installing-vyper.html)
 ```
 $ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
 $ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
-$ pip install scrypt
 $ git clone https://github.com/ethereum/vyper.git
 $ cd vyper
 $ make
@@ -46,7 +45,6 @@ $ cd ..
 ```
 $ pip install pytest
 $ pip install ethereum
-$ pip install 'rlp==0.6.0'
 ```
 
 6) Run tests

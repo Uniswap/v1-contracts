@@ -14,9 +14,9 @@ run tests with:             python -m pytest -v
 '''
 
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
-EXCHANGE_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_exchange.v.py')).read()
-ERC20_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/ERC20.v.py')).read()
-FACTORY_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_factory.v.py')).read()
+EXCHANGE_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_exchange.vy')).read()
+ERC20_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/ERC20.vy')).read()
+FACTORY_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_factory.vy')).read()
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def assert_tx_failed(t):
         initial_state = t.s.snapshot()
         with pytest.raises(exception):
             function_to_test()
-        t.s.revert(initial_state)
+        # t.s.revert(initial_state)
     return assert_tx_failed
 
 
@@ -95,7 +95,7 @@ def exchange_abi(chain):
 
 
 @pytest.fixture
-def uniswap_exchange(chain):
+def exchange_template(chain):
     chain.mine()
     return chain.contract(EXCHANGE_CODE, language='vyper')
 
@@ -113,10 +113,10 @@ def swap_token(chain):
 
 
 @pytest.fixture
-def exchange_factory(chain, uniswap_exchange):
+def exchange_factory(chain, exchange_template, assert_tx_failed):
     chain.mine()
     factory_contract = chain.contract(FACTORY_CODE, language='vyper')
-    factory_contract.setup(uniswap_exchange.address)
+    factory_contract.setup(exchange_template.address)
     return factory_contract
 
 
