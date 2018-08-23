@@ -1,139 +1,140 @@
-def test_swap_all(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
+def test_swap_all(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     deadline = chain.head_state.timestamp + 300
-    uni_token.transfer(t.a1, 3*10**18)
-    uni_token.approve(uni_exchange.address, 10*10**18)
-    uni_token.approve(uni_exchange.address, 3*10**18, sender=t.k1)
-    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
-    swap_token.approve(swap_exchange.address, 20*10**18)
-    swap_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
+    omg_token.transfer(t.a1, 3*10**18)
+    omg_token.approve(omg_exchange.address, 10*10**18)
+    omg_token.approve(omg_exchange.address, 3*10**18, sender=t.k1)
+    omg_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
+    dai_token.approve(dai_exchange.address, 20*10**18)
+    dai_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
     # Starting balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 5*10**18
-    assert uni_token.balanceOf(uni_exchange.address) == 10*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 5*10**18
+    assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
     # Starting balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5*10**18
-    assert swap_token.balanceOf(swap_exchange.address) == 20*10**18
+    assert chain.head_state.get_balance(dai_exchange.address) == 5*10**18
+    assert dai_token.balanceOf(dai_exchange.address) == 20*10**18
     # Starting balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 3*10**18
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 3*10**18
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.tokenToTokenSwap(swap_token.address, 2*10**18, 1, deadline, startgas=110000, sender=t.k1)
+    omg_exchange.tokenToTokenSwap(dai_token.address, 2*10**18, 1, deadline, startgas=108048, sender=t.k1)
+    # omg_exchange.tokenToTokenSwap(dai_token.address, 2*10**18, 1, deadline, startgas=108048, sender=t.k1)
     # Updated balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 4168403501458941225
-    assert uni_token.balanceOf(uni_exchange.address) == 12*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
     # Updated balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5831596498541058775
-    assert swap_token.balanceOf(swap_exchange.address) == 17154078339222077916
+    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058775
+    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077916
     # Updated balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 1*10**18
-    assert swap_token.balanceOf(t.a1) == 2845921660777922084
+    assert omg_token.balanceOf(t.a1) == 1*10**18
+    assert dai_token.balanceOf(t.a1) == 2845921660777922084
     assert chain.head_state.get_balance(t.a1) == 1*10**24
 
-def test_swap_exact(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
+def test_swap_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     deadline = chain.head_state.timestamp + 300
-    uni_token.transfer(t.a1, 3*10**18)
-    uni_token.approve(uni_exchange.address, 10*10**18)
-    uni_token.approve(uni_exchange.address, 3*10**18, sender=t.k1)
-    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
-    swap_token.approve(swap_exchange.address, 20*10**18)
-    swap_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
+    omg_token.transfer(t.a1, 3*10**18)
+    omg_token.approve(omg_exchange.address, 10*10**18)
+    omg_token.approve(omg_exchange.address, 3*10**18, sender=t.k1)
+    omg_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
+    dai_token.approve(dai_exchange.address, 20*10**18)
+    dai_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
     # Starting balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 5*10**18
-    assert uni_token.balanceOf(uni_exchange.address) == 10*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 5*10**18
+    assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
     # Starting balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5*10**18
-    assert swap_token.balanceOf(swap_exchange.address) == 20*10**18
+    assert chain.head_state.get_balance(dai_exchange.address) == 5*10**18
+    assert dai_token.balanceOf(dai_exchange.address) == 20*10**18
     # Starting balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 3*10**18
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 3*10**18
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.tokenToTokenSwapExact(swap_token.address, 3*10**18, 2845921660777922084, deadline, startgas=116650, sender=t.k1)
+    omg_exchange.tokenToTokenSwapExact(dai_token.address, 3*10**18, 2845921660777922084, deadline, startgas=116650, sender=t.k1)
     # Updated balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 4168403501458941225
-    assert uni_token.balanceOf(uni_exchange.address) == 12*10**18 + 1
+    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
     # Updated balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5831596498541058775
-    assert swap_token.balanceOf(swap_exchange.address) == 17154078339222077916
+    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058775
+    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077916
     # Updated balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 1*10**18 - 1
-    assert swap_token.balanceOf(t.a1) == 2845921660777922084
+    assert omg_token.balanceOf(t.a1) == 1*10**18 - 1
+    assert dai_token.balanceOf(t.a1) == 2845921660777922084
     assert chain.head_state.get_balance(t.a1) == 1*10**24
 
-def test_transfer_all(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
+def test_transfer_all(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     deadline = chain.head_state.timestamp + 300
-    uni_token.transfer(t.a1, 3*10**18)
-    uni_token.approve(uni_exchange.address, 10*10**18)
-    uni_token.approve(uni_exchange.address, 3*10**18, sender=t.k1)
-    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
-    swap_token.approve(swap_exchange.address, 20*10**18)
-    swap_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
+    omg_token.transfer(t.a1, 3*10**18)
+    omg_token.approve(omg_exchange.address, 10*10**18)
+    omg_token.approve(omg_exchange.address, 3*10**18, sender=t.k1)
+    omg_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
+    dai_token.approve(dai_exchange.address, 20*10**18)
+    dai_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
     # Starting balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 5*10**18
-    assert uni_token.balanceOf(uni_exchange.address) == 10*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 5*10**18
+    assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
     # Starting balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5*10**18
-    assert swap_token.balanceOf(swap_exchange.address) == 20*10**18
+    assert chain.head_state.get_balance(dai_exchange.address) == 5*10**18
+    assert dai_token.balanceOf(dai_exchange.address) == 20*10**18
     # Starting balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 3*10**18
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 3*10**18
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Starting balances of RECIPIENT
-    assert uni_token.balanceOf(t.a2) == 0
-    assert swap_token.balanceOf(t.a2) == 0
+    assert omg_token.balanceOf(t.a2) == 0
+    assert dai_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.tokenToTokenTransfer(swap_token.address, t.a2, 2*10**18, 1, deadline, startgas=116000, sender=t.k1)
+    omg_exchange.tokenToTokenTransfer(dai_token.address, t.a2, 2*10**18, 1, deadline, startgas=116000, sender=t.k1)
     # Updated balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 4168403501458941225
-    assert uni_token.balanceOf(uni_exchange.address) == 12*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
     # Updated balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5831596498541058775
-    assert swap_token.balanceOf(swap_exchange.address) == 17154078339222077916
+    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058775
+    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077916
     # Updated balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 1*10**18
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 1*10**18
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Updated balances of RECIPIENT
-    assert uni_token.balanceOf(t.a2) == 0
-    assert swap_token.balanceOf(t.a2) == 2845921660777922084
+    assert omg_token.balanceOf(t.a2) == 0
+    assert dai_token.balanceOf(t.a2) == 2845921660777922084
     assert chain.head_state.get_balance(t.a2) == 1*10**24
 
-def test_transfer_exact(t, chain, uni_token, swap_token, uni_exchange, swap_exchange, assert_tx_failed):
+def test_transfer_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     deadline = chain.head_state.timestamp + 300
-    uni_token.transfer(t.a1, 3*10**18)
-    uni_token.approve(uni_exchange.address, 10*10**18)
-    uni_token.approve(uni_exchange.address, 3*10**18, sender=t.k1)
-    uni_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
-    swap_token.approve(swap_exchange.address, 20*10**18)
-    swap_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
+    omg_token.transfer(t.a1, 3*10**18)
+    omg_token.approve(omg_exchange.address, 10*10**18)
+    omg_token.approve(omg_exchange.address, 3*10**18, sender=t.k1)
+    omg_exchange.addLiquidity(10*10**18, deadline, value=5*10**18)
+    dai_token.approve(dai_exchange.address, 20*10**18)
+    dai_exchange.addLiquidity(20*10**18, deadline, value=5*10**18)
     # Starting balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 5*10**18
-    assert uni_token.balanceOf(uni_exchange.address) == 10*10**18
+    assert chain.head_state.get_balance(omg_exchange.address) == 5*10**18
+    assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
     # Starting balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5*10**18
-    assert swap_token.balanceOf(swap_exchange.address) == 20*10**18
+    assert chain.head_state.get_balance(dai_exchange.address) == 5*10**18
+    assert dai_token.balanceOf(dai_exchange.address) == 20*10**18
     # Starting balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 3*10**18
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 3*10**18
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Starting balances of RECIPIENT
-    assert uni_token.balanceOf(t.a2) == 0
-    assert swap_token.balanceOf(t.a2) == 0
+    assert omg_token.balanceOf(t.a2) == 0
+    assert dai_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    uni_exchange.tokenToTokenTransferExact(swap_token.address, t.a2, 3*10**18, 2845921660777922084, deadline, startgas=125000, sender=t.k1)
+    omg_exchange.tokenToTokenTransferExact(dai_token.address, t.a2, 3*10**18, 2845921660777922084, deadline, startgas=125000, sender=t.k1)
     # Updated balances of UNI exchange
-    assert chain.head_state.get_balance(uni_exchange.address) == 4168403501458941225
-    assert uni_token.balanceOf(uni_exchange.address) == 12*10**18 + 1
+    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
     # Updated balances of SWAP exchange
-    assert chain.head_state.get_balance(swap_exchange.address) == 5831596498541058775
-    assert swap_token.balanceOf(swap_exchange.address) == 17154078339222077916
+    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058775
+    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077916
     # Updated balances of BUYER
-    assert uni_token.balanceOf(t.a1) == 1*10**18 - 1
-    assert swap_token.balanceOf(t.a1) == 0
+    assert omg_token.balanceOf(t.a1) == 1*10**18 - 1
+    assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Updated balances of RECIPIENT
-    assert uni_token.balanceOf(t.a2) ==  0
-    assert swap_token.balanceOf(t.a2) == 2845921660777922084
+    assert omg_token.balanceOf(t.a2) ==  0
+    assert dai_token.balanceOf(t.a2) == 2845921660777922084
     assert chain.head_state.get_balance(t.a2) == 1*10**24

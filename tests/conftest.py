@@ -87,6 +87,13 @@ def get_last_log(get_logs):
 #         return bytes(str, 'utf-8') + bytearray(length - len(str))
 #     return bytes_helper
 
+@pytest.fixture
+def pad_bytes32():
+    def pad_bytes32(instr):
+        """ Pad a string \x00 bytes to return correct bytes32 representation. """
+        bstr = instr.encode()
+        return bstr + (32 - len(bstr)) * b'\x00'
+    return pad_bytes32
 
 @pytest.fixture
 def exchange_abi(chain):
@@ -101,15 +108,15 @@ def exchange_template(chain):
 
 
 @pytest.fixture
-def uni_token(chain):
+def omg_token(chain):
     chain.mine()
-    return chain.contract(ERC20_CODE, language='vyper', args=["UNI Token", "UNI", 18, 100000*10**18])
+    return chain.contract(ERC20_CODE, language='vyper', args=["OMG Token", "OMG", 18, 100000*10**18])
 
 
 @pytest.fixture
-def swap_token(chain):
+def dai_token(chain):
     chain.mine()
-    return chain.contract(ERC20_CODE, language='vyper', args=["SWAP Token", "SWAP", 18, 100000*10**18])
+    return chain.contract(ERC20_CODE, language='vyper', args=["DAI Token", "DAI", 18, 100000*10**18])
 
 
 @pytest.fixture
@@ -121,14 +128,14 @@ def exchange_factory(chain, exchange_template, assert_tx_failed):
 
 
 @pytest.fixture
-def uni_exchange(t, chain, exchange_factory, exchange_abi, uni_token):
+def omg_exchange(t, chain, exchange_factory, exchange_abi, omg_token):
     chain.mine()
-    uni_exchange_address = exchange_factory.createExchange(uni_token.address)
-    return t.ABIContract(chain, exchange_abi, uni_exchange_address)
+    omg_exchange_address = exchange_factory.createExchange(omg_token.address)
+    return t.ABIContract(chain, exchange_abi, omg_exchange_address)
 
 
 @pytest.fixture
-def swap_exchange(t, chain, exchange_factory, exchange_abi, swap_token):
+def dai_exchange(t, chain, exchange_factory, exchange_abi, dai_token):
     chain.mine()
-    swap_exchange_address = exchange_factory.createExchange(swap_token.address)
-    return t.ABIContract(chain, exchange_abi, swap_exchange_address)
+    dai_exchange_address = exchange_factory.createExchange(dai_token.address)
+    return t.ABIContract(chain, exchange_abi, dai_exchange_address)
