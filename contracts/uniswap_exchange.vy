@@ -2,8 +2,8 @@ contract Factory():
     def getExchange(token_addr: address) -> address: constant
 
 contract Exchange():
-    def ethToTokenExact(tokens_bought: uint256, eth_input: uint256(wei), deadline: timestamp) -> uint256(wei): constant
-    def ethToTokenTransfer(recipent: address, token_amount: uint256, deadline: timestamp) -> uint256: modifying
+    def ethToTokenExactPrice(tokens_bought: uint256, eth_input: uint256(wei)) -> uint256(wei): constant
+    def ethToTokenTransfer(recipent: address, min_tokens: uint256, deadline: timestamp) -> uint256: modifying
 
 TokenPurchase: event({buyer: indexed(address), eth_sold: indexed(uint256(wei)), tokens_bought: indexed(uint256)})
 EthPurchase: event({buyer: indexed(address), tokens_sold: indexed(uint256), eth_bought: indexed(uint256(wei))})
@@ -56,7 +56,7 @@ def addLiquidity(amount: uint256, deadline: timestamp) -> uint256:
         return liquidity_minted
     else:
         assert self.factory != ZERO_ADDRESS and self.token != ZERO_ADDRESS
-        assert msg.value >= 100000
+        assert msg.value >= 1000000000
         assert self.factory.getExchange(self.token) == self
         initial_liquidity: uint256 = as_unitless_number(self.balance)
         self.totalSupply = initial_liquidity
@@ -71,24 +71,23 @@ def addLiquidity(amount: uint256, deadline: timestamp) -> uint256:
 def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256, deadline: timestamp) -> (uint256(wei), uint256):
     assert amount > 0 and deadline > block.timestamp
     assert min_eth > 0 and min_tokens > 0
-    liquidity_total: uint256 = self.totalSupply
+    total_liquidity: uint256 = self.totalSupply
     token_reserve: uint256 = self.token.balanceOf(self)
-    eth_amount: uint256(wei) = amount * self.balance / liquidity_total
-    token_amount: uint256 = amount * token_reserve / liquidity_total
+    eth_amount: uint256(wei) = amount * self.balance / total_liquidity
+    token_amount: uint256 = amount * token_reserve / total_liquidity
     assert eth_amount > min_eth and token_amount > min_tokens
     self.liquidity_balances[msg.sender] -= amount
-    self.totalSupply = liquidity_total - amount
+    self.totalSupply = total_liquidity - amount
     assert self.token.transfer(msg.sender, token_amount)
     send(msg.sender, eth_amount)
     log.RemoveLiquidity(msg.sender, eth_amount, token_amount)
     log.Transfer(msg.sender, ZERO_ADDRESS, amount)
     return eth_amount, token_amount
 
-# Private function for determining eth to token exchange rate
-@private
+# Function for determining eth to token exchange rate
+@public
 @constant
-def ethToToken(recipent: address, eth_sold: uint256(wei), min_tokens: uint256, deadline: timestamp) -> uint256:
-    assert self.totalSupply > 0 and deadline >= block.timestamp
+def ethToTokenPrice(eth_sold: uint256(wei), min_tokens: uint256) -> uint256:
     assert eth_sold > 0 and min_tokens > 0
     # eth_reserve = eth_bal - eth_sold
     eth_bal: uint256(wei) = self.balance
@@ -99,12 +98,24 @@ def ethToToken(recipent: address, eth_sold: uint256(wei), min_tokens: uint256, d
     assert tokens_bought >= min_tokens
     return tokens_bought
 
+# Function for determining eth to token exchange rate
+@public
+@constant
+def ethToTokenExactPrice(tokens_bought: uint256, eth_input: uint256(wei)) -> uint256(wei):
+    assert tokens_bought > 0
+    eth_reserve: uint256(wei) = self.balance - eth_input
+    token_reserve: uint256 = self.token.balanceOf(self)
+    new_token_reserve: uint256 = token_reserve - tokens_bought
+    new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / new_token_reserve
+    return (new_eth_reserve - eth_reserve) * 400 / 399
+
 # Fallback function that converts received ETH to tokens
 # User specifies exact input amount and minimum output amount
 @public
 @payable
 def __default__():
-    token_amount: uint256 = self.ethToToken(msg.sender, msg.value, 1, block.timestamp)
+    assert self.totalSupply > 0
+    token_amount: uint256 = self.ethToTokenPrice(msg.value, 1)
     assert self.token.transfer(msg.sender, token_amount)
     log.TokenPurchase(msg.sender, msg.value, token_amount)
 
@@ -113,7 +124,8 @@ def __default__():
 @public
 @payable
 def ethToTokenSwap(min_tokens: uint256, deadline: timestamp) -> uint256:
-    tokens_bought: uint256 = self.ethToToken(msg.sender, msg.value, min_tokens, deadline)
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    tokens_bought: uint256 = self.ethToTokenPrice(msg.value, min_tokens)
     assert self.token.transfer(msg.sender, tokens_bought)
     log.TokenPurchase(msg.sender, msg.value, tokens_bought)
     return tokens_bought
@@ -123,31 +135,21 @@ def ethToTokenSwap(min_tokens: uint256, deadline: timestamp) -> uint256:
 @public
 @payable
 def ethToTokenTransfer(recipent: address, min_tokens: uint256, deadline: timestamp) -> uint256:
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     assert recipent != self and recipent != ZERO_ADDRESS
-    tokens_bought: uint256 = self.ethToToken(recipent, msg.value, min_tokens, deadline)
+    tokens_bought: uint256 = self.ethToTokenPrice(msg.value, min_tokens)
     assert self.token.transfer(recipent, tokens_bought)
     log.TokenPurchase(msg.sender, msg.value, tokens_bought)
     return tokens_bought
-
-# Function for determining eth to token exchange rate
-@public
-@constant
-def ethToTokenExact(tokens_bought: uint256, eth_input: uint256(wei), deadline: timestamp) -> uint256(wei):
-    assert self.totalSupply > 0 and deadline >= block.timestamp
-    assert tokens_bought > 0
-    eth_reserve: uint256(wei) = self.balance - eth_input
-    token_reserve: uint256 = self.token.balanceOf(self)
-    new_token_reserve: uint256 = token_reserve - tokens_bought
-    new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / new_token_reserve
-    return (new_eth_reserve - eth_reserve) * 400 / 399
 
 # Converts ETH to tokens, sender recieves tokens
 # User specifies maximum input amount and exact output amount
 @public
 @payable
 def ethToTokenSwapExact(tokens_bought: uint256, deadline: timestamp) -> uint256(wei):
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     assert msg.value > 0
-    eth_sold: uint256(wei) = self.ethToTokenExact(tokens_bought, msg.value, deadline)
+    eth_sold: uint256(wei) = self.ethToTokenExactPrice(tokens_bought, msg.value)
     # reverts if msg.value < eth_sold
     eth_refund: uint256(wei) = msg.value - eth_sold
     assert self.token.transfer(msg.sender, tokens_bought)
@@ -160,9 +162,10 @@ def ethToTokenSwapExact(tokens_bought: uint256, deadline: timestamp) -> uint256(
 @public
 @payable
 def ethToTokenTransferExact(recipent: address, tokens_bought: uint256, deadline: timestamp) -> uint256(wei):
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     assert msg.value > 0
     assert recipent != self and recipent != ZERO_ADDRESS
-    eth_sold: uint256(wei) = self.ethToTokenExact(tokens_bought, msg.value, deadline)
+    eth_sold: uint256(wei) = self.ethToTokenExactPrice(tokens_bought, msg.value)
     # reverts if msg.value < eth_sold
     eth_refund: uint256(wei) = msg.value - eth_sold
     assert self.token.transfer(recipent, tokens_bought)
@@ -170,11 +173,10 @@ def ethToTokenTransferExact(recipent: address, tokens_bought: uint256, deadline:
     log.TokenPurchase(msg.sender, eth_sold, tokens_bought)
     return eth_sold
 
-# Private function for determining token to eth exchange rate
-@private
+# Function for determining token to eth exchange rate
+@public
 @constant
-def tokenToEth(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp) -> uint256(wei):
-    assert self.totalSupply > 0 and deadline > block.timestamp
+def tokenToEthPrice(tokens_sold: uint256, min_eth: uint256(wei)) -> uint256(wei):
     assert tokens_sold > 0 and min_eth > 0
     eth_reserve: uint256(wei) = self.balance
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -184,35 +186,10 @@ def tokenToEth(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp)
     assert eth_bought >= min_eth
     return eth_bought
 
-
-# Converts tokens to ETH, sender recieves tokens
-# User specifies exact input amount and minimum output amount
-@public
-@payable
-def tokenToEthSwap(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp) -> uint256(wei):
-    eth_bought: uint256(wei) = self.tokenToEth(tokens_sold, min_eth, deadline)
-    assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    send(msg.sender, eth_bought)
-    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
-    return eth_bought
-
-# Converts tokens to ETH, recipent recieves tokens
-# User specifies exact input amount and minimum output amount
-@public
-@payable
-def tokenToEthTransfer(recipent: address, tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp) -> uint256(wei):
-    assert recipent != self and recipent != ZERO_ADDRESS
-    eth_bought: uint256(wei) = self.tokenToEth(tokens_sold, min_eth, deadline)
-    assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    send(recipent, eth_bought)
-    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
-    return eth_bought
-
-# Private function for determining token to eth exchange rate
+# Function for determining token to eth exchange rate
 @public
 @constant
-def tokenToEthExact(max_tokens: uint256, eth_bought: uint256(wei), deadline: timestamp) -> uint256:
-    assert self.totalSupply > 0 and deadline > block.timestamp
+def tokenToEthExactPrice(eth_bought: uint256(wei), max_tokens: uint256) -> uint256:
     assert max_tokens > 0 and eth_bought > 0
     eth_reserve: uint256(wei) = self.balance
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -223,11 +200,37 @@ def tokenToEthExact(max_tokens: uint256, eth_bought: uint256(wei), deadline: tim
     return tokens_sold
 
 # Converts tokens to ETH, sender recieves tokens
+# User specifies exact input amount and minimum output amount
+@public
+@payable
+def tokenToEthSwap(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp) -> uint256(wei):
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    eth_bought: uint256(wei) = self.tokenToEthPrice(tokens_sold, min_eth)
+    assert self.token.transferFrom(msg.sender, self, tokens_sold)
+    send(msg.sender, eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
+    return eth_bought
+
+# Converts tokens to ETH, recipent recieves tokens
+# User specifies exact input amount and minimum output amount
+@public
+@payable
+def tokenToEthTransfer(recipent: address, tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp) -> uint256(wei):
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    assert recipent != self and recipent != ZERO_ADDRESS
+    eth_bought: uint256(wei) = self.tokenToEthPrice(tokens_sold, min_eth)
+    assert self.token.transferFrom(msg.sender, self, tokens_sold)
+    send(recipent, eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
+    return eth_bought
+
+# Converts tokens to ETH, sender recieves tokens
 # User specifies maximum input amount and exact output amount
 @public
 @payable
 def tokenToEthSwapExact(max_tokens: uint256, eth_bought: uint256(wei), deadline: timestamp) -> uint256:
-    tokens_sold: uint256 = self.tokenToEthExact(max_tokens, eth_bought, deadline)
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    tokens_sold: uint256 = self.tokenToEthExactPrice(eth_bought, max_tokens)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
     send(msg.sender, eth_bought)
     log.EthPurchase(msg.sender, tokens_sold, eth_bought)
@@ -238,8 +241,9 @@ def tokenToEthSwapExact(max_tokens: uint256, eth_bought: uint256(wei), deadline:
 @public
 @payable
 def tokenToEthTransferExact(recipent: address, max_tokens: uint256, eth_bought: uint256(wei), deadline: timestamp) -> uint256:
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     assert recipent != self and recipent != ZERO_ADDRESS
-    tokens_sold: uint256 = self.tokenToEthExact(max_tokens, eth_bought, deadline)
+    tokens_sold: uint256 = self.tokenToEthExactPrice(eth_bought, max_tokens)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
     send(recipent, eth_bought)
     log.EthPurchase(msg.sender, tokens_sold, eth_bought)
@@ -251,23 +255,27 @@ def tokenToEthTransferExact(recipent: address, max_tokens: uint256, eth_bought: 
 @public
 @payable
 def tokenToTokenSwap(token_addr: address, tokens_sold: uint256, min_tokens_bought: uint256, deadline: timestamp) -> uint256:
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    # returns ZERO_ADDRESS if no exchange exists for token_addr
     exchange_addr: address = self.factory.getExchange(token_addr)
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_amount: uint256(wei) = self.tokenToEth(tokens_sold, 1, deadline)
+    assert exchange_addr != self
+    eth_amount: uint256(wei) = self.tokenToEthPrice(tokens_sold, 1)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
+    # call fails if exchange_addr == ZERO_ADDRESS
     tokens_bought: uint256 = Exchange(exchange_addr).ethToTokenTransfer(msg.sender, min_tokens_bought, deadline, value=eth_amount)
     log.EthPurchase(msg.sender, tokens_sold, eth_amount)
     return tokens_bought
+
 
 # Converts tokens to tokens, recipent recieves tokens
 # User specifies exact input amount and minimum output amount
 @public
 @payable
 def tokenToTokenTransfer(token_addr: address, recipent: address, tokens_sold: uint256, min_tokens_bought: uint256, deadline: timestamp) -> uint256:
-    assert recipent != self and recipent != ZERO_ADDRESS
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     exchange_addr: address = self.factory.getExchange(token_addr)
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_amount: uint256(wei) = self.tokenToEth(tokens_sold, 1, deadline)
+    assert recipent != self and exchange_addr != self
+    eth_amount: uint256(wei) = self.tokenToEthPrice(tokens_sold, 1)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
     tokens_bought: uint256 = Exchange(exchange_addr).ethToTokenTransfer(recipent, min_tokens_bought, deadline, value=eth_amount)
     log.EthPurchase(msg.sender, tokens_sold, eth_amount)
@@ -278,13 +286,14 @@ def tokenToTokenTransfer(token_addr: address, recipent: address, tokens_sold: ui
 @public
 @payable
 def tokenToTokenSwapExact(token_addr: address, max_tokens_sold: uint256, tokens_bought: uint256, deadline: timestamp) -> uint256:
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     exchange_addr: address = self.factory.getExchange(token_addr)
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_required: uint256(wei) = Exchange(exchange_addr).ethToTokenExact(tokens_bought, 0, deadline)
-    tokens_sold: uint256 = self.tokenToEthExact(max_tokens_sold, eth_required, deadline)
+    assert exchange_addr != self
+    eth_bought: uint256(wei) = Exchange(exchange_addr).ethToTokenExactPrice(tokens_bought, 0)
+    tokens_sold: uint256 = self.tokenToEthExactPrice(eth_bought, max_tokens_sold)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    assert Exchange(exchange_addr).ethToTokenTransfer(msg.sender, 1, deadline, value=eth_required)
-    log.EthPurchase(msg.sender, tokens_sold, eth_required)
+    assert Exchange(exchange_addr).ethToTokenTransfer(msg.sender, tokens_bought, deadline, value=eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
     return tokens_sold
 
 # Converts tokens to tokens, recipent recieves tokens
@@ -292,14 +301,14 @@ def tokenToTokenSwapExact(token_addr: address, max_tokens_sold: uint256, tokens_
 @public
 @payable
 def tokenToTokenTransferExact(token_addr: address, recipent: address, max_tokens_sold: uint256, tokens_bought: uint256, deadline: timestamp) -> uint256:
-    assert recipent != self and recipent != ZERO_ADDRESS
+    assert self.totalSupply > 0 and deadline >= block.timestamp
     exchange_addr: address = self.factory.getExchange(token_addr)
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_required: uint256(wei) = Exchange(exchange_addr).ethToTokenExact(tokens_bought, 0, deadline)
-    tokens_sold: uint256 = self.tokenToEthExact(max_tokens_sold, eth_required, deadline)
+    assert recipent != self and exchange_addr != self
+    eth_bought: uint256(wei) = Exchange(exchange_addr).ethToTokenExactPrice(tokens_bought, 0)
+    tokens_sold: uint256 = self.tokenToEthExactPrice(eth_bought, max_tokens_sold)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    assert Exchange(exchange_addr).ethToTokenTransfer(recipent, 1, deadline, value=eth_required)
-    log.EthPurchase(msg.sender, tokens_sold, eth_required)
+    assert Exchange(exchange_addr).ethToTokenTransfer(recipent, tokens_bought, deadline, value=eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
     return tokens_sold
 
 # Converts tokens to tokens, recipent recieves tokens
@@ -308,12 +317,12 @@ def tokenToTokenTransferExact(token_addr: address, recipent: address, max_tokens
 @public
 @payable
 def tokenToExchangeTransfer(exchange_addr: address, recipent: address, tokens_sold: uint256, min_tokens_bought: uint256, deadline: timestamp) -> uint256:
-    assert recipent != self and recipent != ZERO_ADDRESS
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_amount: uint256(wei) = self.tokenToEth(tokens_sold, 1, deadline)
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    assert recipent != self and exchange_addr != self
+    eth_bought: uint256(wei) = self.tokenToEthPrice(tokens_sold, 1)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    tokens_bought: uint256 = Exchange(exchange_addr).ethToTokenTransfer(recipent, min_tokens_bought, deadline, value=eth_amount)
-    log.EthPurchase(msg.sender, tokens_sold, eth_amount)
+    tokens_bought: uint256 = Exchange(exchange_addr).ethToTokenTransfer(recipent, min_tokens_bought, deadline, value=eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
     return tokens_bought
 
 # Converts tokens to tokens, recipent recieves tokens
@@ -322,13 +331,13 @@ def tokenToExchangeTransfer(exchange_addr: address, recipent: address, tokens_so
 @public
 @payable
 def tokenToExchangeTransferExact(exchange_addr: address, recipent: address, max_tokens_sold: uint256, tokens_bought: uint256, deadline: timestamp) -> uint256:
-    assert recipent != self and recipent != ZERO_ADDRESS
-    assert exchange_addr != ZERO_ADDRESS and exchange_addr != self
-    eth_required: uint256(wei) = Exchange(exchange_addr).ethToTokenExact(tokens_bought, 0, deadline)
-    tokens_sold: uint256 = self.tokenToEthExact(max_tokens_sold, eth_required, deadline)
+    assert self.totalSupply > 0 and deadline >= block.timestamp
+    assert recipent != self and exchange_addr != self
+    eth_bought: uint256(wei) = Exchange(exchange_addr).ethToTokenExactPrice(tokens_bought, 0)
+    tokens_sold: uint256 = self.tokenToEthExactPrice(eth_bought, max_tokens_sold)
     assert self.token.transferFrom(msg.sender, self, tokens_sold)
-    assert Exchange(exchange_addr).ethToTokenTransfer(recipent, 1, deadline, value=eth_required)
-    log.EthPurchase(msg.sender, tokens_sold, eth_required)
+    assert Exchange(exchange_addr).ethToTokenTransfer(recipent, 1, deadline, value=eth_bought)
+    log.EthPurchase(msg.sender, tokens_sold, eth_bought)
     return tokens_sold
 
 @public
