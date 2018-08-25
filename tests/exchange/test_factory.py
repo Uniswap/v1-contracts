@@ -1,6 +1,6 @@
 def test_factory(t, chain, utils, exchange_abi, exchange_template, omg_token, exchange_factory, assert_tx_failed, pad_bytes32):
     # Factory initial state
-    assert utils.remove_0x_head(exchange_factory.templateAddress()) == exchange_template.address.hex()
+    assert utils.remove_0x_head(exchange_factory.exchangeTemplate()) == exchange_template.address.hex()
     # Create Exchange for UNI Token
     exchange_address = exchange_factory.createExchange(omg_token.address)
     omg_exchange = t.ABIContract(chain, exchange_abi, exchange_address)

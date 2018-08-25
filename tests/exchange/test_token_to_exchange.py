@@ -1,4 +1,4 @@
-def test_transfer_all(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
+def test_transfer(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     deadline = chain.head_state.timestamp + 300
     omg_token.transfer(t.a1, 3*10**18)
     omg_token.approve(omg_exchange.address, 10*10**18)
@@ -21,7 +21,7 @@ def test_transfer_all(t, chain, omg_token, dai_token, omg_exchange, dai_exchange
     assert dai_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToExchangeTransfer(dai_exchange.address, t.a2, 2*10**18, 1, deadline, startgas=116000, sender=t.k1)
+    omg_exchange.tokenToExchangeTransfer(2*10**18, 1, deadline, t.a2, dai_exchange.address, startgas=116000, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
@@ -60,7 +60,7 @@ def test_transfer_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchan
     assert dai_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToExchangeTransferExact(dai_exchange.address, t.a2, 3*10**18, 2845921660777922084, deadline, startgas=125000, sender=t.k1)
+    omg_exchange.tokenToExchangeTransferExact(2845921660777922084, 3*10**18, deadline, t.a2, dai_exchange.address, startgas=125000, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1

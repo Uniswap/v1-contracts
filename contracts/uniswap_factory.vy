@@ -3,22 +3,22 @@ contract Exchange():
 
 NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
-templateAddress: public(address)
+exchangeTemplate: public(address)
 token_to_exchange: address[address]
 exchange_to_token: address[address]
 
 @public
 def setup(template: address):
-    assert self.templateAddress == ZERO_ADDRESS
+    assert self.exchangeTemplate == ZERO_ADDRESS
     assert template != ZERO_ADDRESS
-    self.templateAddress = template
+    self.exchangeTemplate = template
 
 @public
 def createExchange(token: address) -> address:
     assert token != ZERO_ADDRESS
-    assert self.templateAddress != ZERO_ADDRESS
+    assert self.exchangeTemplate != ZERO_ADDRESS
     assert self.token_to_exchange[token] == ZERO_ADDRESS
-    exchange: address = create_with_code_of(self.templateAddress)
+    exchange: address = create_with_code_of(self.exchangeTemplate)
     assert Exchange(exchange).setup(token)
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token
