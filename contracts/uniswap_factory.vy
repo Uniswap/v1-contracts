@@ -8,7 +8,7 @@ token_to_exchange: address[address]
 exchange_to_token: address[address]
 
 @public
-def setup(template: address):
+def initializeFactory(template: address):
     assert self.exchangeTemplate == ZERO_ADDRESS
     assert template != ZERO_ADDRESS
     self.exchangeTemplate = template

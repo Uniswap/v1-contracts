@@ -123,7 +123,7 @@ def dai_token(chain):
 def exchange_factory(chain, exchange_template, assert_tx_failed):
     chain.mine()
     factory_contract = chain.contract(FACTORY_CODE, language='vyper')
-    factory_contract.setup(exchange_template.address)
+    factory_contract.initializeFactory(exchange_template.address)
     return factory_contract
 
 

@@ -6,8 +6,8 @@ def test_factory(t, chain, utils, exchange_abi, exchange_template, omg_token, ex
     omg_exchange = t.ABIContract(chain, exchange_abi, exchange_address)
     assert exchange_factory.getExchange(omg_token.address) == exchange_address
     assert utils.remove_0x_head(exchange_factory.getToken(omg_exchange.address)) == omg_token.address.hex()
-    # Can't call setup on factory twice
-    assert_tx_failed(lambda: exchange_factory.setup(omg_token.address))
+    # Can't call initializeFactory on factory twice
+    assert_tx_failed(lambda: exchange_factory.initializeFactory(omg_token.address))
     # Exchange already exists
     assert_tx_failed(lambda: exchange_factory.createExchange(omg_token.address))
     # Can't call setup on exchange
