@@ -29,7 +29,7 @@ def test_swap(t, chain, omg_token, omg_exchange, assert_tx_failed):
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
     # assert omg_exchange.ethToTokenSwap(1, deadline, value=1*10**18, startgas=62707, sender=t.k1) == 1663192997082117549 # Cost 1
-    assert omg_exchange.ethToTokenSwap(1, deadline, value=1*10**18, startgas=62907, sender=t.k1) == 1663192997082117549 # Cost 2
+    assert omg_exchange.ethToTokenSwap(1, deadline, value=1*10**18, startgas=63907, sender=t.k1) == 1663192997082117549 # Cost 2
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 6*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 8336807002917882451

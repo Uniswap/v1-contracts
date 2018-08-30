@@ -17,7 +17,7 @@ def test_swap(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert
     assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToTokenSwap(2*10**18, 1, deadline, dai_token.address, startgas=108048, sender=t.k1)
+    omg_exchange.tokenToTokenSwap(2*10**18, 1, deadline, dai_token.address, startgas=109048, sender=t.k1)
     # omg_exchange.tokenToTokenSwap(dai_token.address, 2*10**18, 1, deadline, startgas=108048, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
@@ -88,7 +88,7 @@ def test_swap_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, 
     assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToTokenSwapExact(2845921660777922084, 3*10**18, deadline, dai_token.address, startgas=116650, sender=t.k1)
+    omg_exchange.tokenToTokenSwapExact(2845921660777922084, 3*10**18, deadline, dai_token.address, startgas=139650, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
@@ -123,7 +123,7 @@ def test_transfer_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchan
     assert dai_token.balanceOf(t.a2) == 0
     assert chain.head_state.get_balance(t.a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToTokenTransferExact(2845921660777922084, 3*10**18, deadline, t.a2, dai_token.address, startgas=125000, sender=t.k1)
+    omg_exchange.tokenToTokenTransferExact(2845921660777922084, 3*10**18, deadline, t.a2, dai_token.address, startgas=135000, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
