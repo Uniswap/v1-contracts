@@ -96,8 +96,8 @@ def ethToToken(eth_sold: uint256(wei)) -> uint256:
     token_reserve: uint256 = self.token.balanceOf(self)
     fee: uint256(wei) = eth_sold / 400
     new_token_reserve: uint256 = (eth_bal - eth_sold) * token_reserve / (eth_bal - fee)
-    tokens_bought: uint256 =  token_reserve - new_token_reserve
-    return tokens_bought
+    # -1 prevents liquidity losses from integer rounding
+    return  token_reserve - new_token_reserve - 1
 
 @public
 @constant
@@ -111,7 +111,8 @@ def ethToTokenExact(tokens_bought: uint256, eth_input: uint256(wei)) -> uint256(
     assert tokens_bought > 0
     eth_reserve: uint256(wei) = self.balance - eth_input
     token_reserve: uint256 = self.token.balanceOf(self)
-    new_token_reserve: uint256 = token_reserve - tokens_bought
+    # -1 prevents liquidity losses from integer rounding
+    new_token_reserve: uint256 = token_reserve - tokens_bought - 1
     new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / new_token_reserve
     return (new_eth_reserve - eth_reserve) * 400 / 399
 
@@ -129,8 +130,8 @@ def tokenToEth(tokens_sold: uint256) -> uint256(wei):
     token_reserve: uint256 = self.token.balanceOf(self)
     fee: uint256 = tokens_sold / 400
     new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / (token_reserve + tokens_sold - fee)
-    eth_bought: uint256(wei) =  eth_reserve - new_eth_reserve
-    return eth_bought
+    # -1 prevents liquidity losses from integer rounding
+    return eth_reserve - new_eth_reserve - as_wei_value(1, 'wei')
 
 @public
 @constant
@@ -144,10 +145,10 @@ def tokenToEthExact(eth_bought: uint256(wei)) -> uint256:
     assert eth_bought > 0
     eth_reserve: uint256(wei) = self.balance
     token_reserve: uint256 = self.token.balanceOf(self)
-    new_eth_reserve: uint256(wei) = eth_reserve - eth_bought
+    # -1 prevents liquidity losses from integer rounding
+    new_eth_reserve: uint256(wei) = eth_reserve - eth_bought - as_wei_value(1, 'wei')
     new_token_reserve: uint256 = eth_reserve * token_reserve / new_eth_reserve
-    tokens_sold: uint256 = (new_token_reserve - token_reserve) * 400 / 399
-    return tokens_sold
+    return (new_token_reserve - token_reserve) * 400 / 399
 
 @public
 @constant
