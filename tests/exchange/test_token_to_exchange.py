@@ -27,14 +27,14 @@ def test_transfer(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, as
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
     # Updated balances of SWAP exchange
     assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058774
-    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077920
+    assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077923
     # Updated balances of BUYER
     assert omg_token.balanceOf(t.a1) == 1*10**18
     assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Updated balances of RECIPIENT
     assert omg_token.balanceOf(t.a2) == 0
-    assert dai_token.balanceOf(t.a2) == 2845921660777922080
+    assert dai_token.balanceOf(t.a2) == 2845921660777922077
     assert chain.head_state.get_balance(t.a2) == 1*10**24
 
 def test_transfer_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
@@ -62,13 +62,13 @@ def test_transfer_exact(t, chain, omg_token, dai_token, omg_exchange, dai_exchan
     # BUYER converts ETH to UNI
     omg_exchange.tokenToExchangeTransferExact(2845921660777922080, 3*10**18, deadline, t.a2, dai_exchange.address, startgas=125000, sender=t.k1)
     # Updated balances of UNI exchange
-    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941226
-    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
+    assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941225
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 3
     # Updated balances of SWAP exchange
-    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058774
+    assert chain.head_state.get_balance(dai_exchange.address) == 5831596498541058775
     assert dai_token.balanceOf(dai_exchange.address) == 17154078339222077920
     # Updated balances of BUYER
-    assert omg_token.balanceOf(t.a1) == 1*10**18 - 1
+    assert omg_token.balanceOf(t.a1) == 1*10**18 - 3
     assert dai_token.balanceOf(t.a1) == 0
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Updated balances of RECIPIENT

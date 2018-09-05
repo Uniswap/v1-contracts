@@ -62,9 +62,9 @@ def test_swap_exact(t, chain, omg_token, omg_exchange, assert_tx_failed):
     omg_exchange.tokenToEthSwapExact(831596498541058774, 3*10**18, deadline, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941226
-    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 - 1
     # Updated balances of BUYER
-    assert omg_token.balanceOf(t.a1) == 1*10**18 - 1
+    assert omg_token.balanceOf(t.a1) == 1*10**18 + 1
     assert chain.head_state.get_balance(t.a1) == 1*10**24 + 831596498541058774
 
 def test_transfer_exact(t, chain, omg_token, omg_exchange, assert_tx_failed):
@@ -86,9 +86,9 @@ def test_transfer_exact(t, chain, omg_token, omg_exchange, assert_tx_failed):
     omg_exchange.tokenToEthTransferExact(831596498541058774, 3*10**18, deadline, t.a2, sender=t.k1)
     # Updated balances of UNI exchange
     assert chain.head_state.get_balance(omg_exchange.address) == 4168403501458941226
-    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 + 1
+    assert omg_token.balanceOf(omg_exchange.address) == 12*10**18 - 1
     # Updated balances of BUYER
-    assert omg_token.balanceOf(t.a1) == 1*10**18 - 1
+    assert omg_token.balanceOf(t.a1) == 1*10**18 + 1
     assert chain.head_state.get_balance(t.a1) == 1*10**24
     # Updated balances of RECIPIENT
     assert omg_token.balanceOf(t.a2) == 0
