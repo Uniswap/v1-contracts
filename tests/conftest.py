@@ -3,11 +3,7 @@ import pytest
 
 from ethereum.tools import tester
 from ethereum import utils as ethereum_utils
-from vyper import (
-    compile_lll,
-    optimizer,
-    compiler,
-)
+import vyper
 
 '''
 run tests with:             python -m pytest -v
