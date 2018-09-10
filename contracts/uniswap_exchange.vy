@@ -86,7 +86,7 @@ def ethToTokenPrice(eth_sold: uint256(wei), eth_input: uint256(wei)) -> uint256:
     # eth_reserve = eth_bal - eth_sold
     eth_bal: uint256(wei) = self.balance
     token_reserve: uint256 = self.token.balanceOf(self)
-    fee: uint256(wei) = eth_sold / 400 + 1
+    fee: uint256(wei) = eth_sold * 3 / 1000 + 1
     new_token_reserve: uint256 = (eth_bal - eth_input) * token_reserve / (eth_bal - fee)
     return token_reserve - new_token_reserve - 1
 
@@ -136,7 +136,7 @@ def ethToTokenExactPrice(tokens_bought: uint256, eth_input: uint256(wei)) -> uin
     new_token_reserve: uint256 = token_reserve - tokens_bought
     new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / new_token_reserve
     eth_sold: uint256(wei) = new_eth_reserve - eth_reserve + as_wei_value(1, 'wei')
-    return eth_sold * 400 / 399 + as_wei_value(1, 'wei')
+    return eth_sold * 1000 / 997 + as_wei_value(1, 'wei')
 
 @public
 @constant
@@ -176,7 +176,7 @@ def tokenToEthPrice(tokens_sold: uint256) -> uint256(wei):
     assert tokens_sold > 0
     eth_reserve: uint256(wei) = self.balance
     token_reserve: uint256 = self.token.balanceOf(self)
-    fee: uint256 = tokens_sold / 400 + 1
+    fee: uint256 = tokens_sold * 3 / 1000 + 1
     new_eth_reserve: uint256(wei) = eth_reserve * token_reserve / (token_reserve + tokens_sold - fee)
     return eth_reserve - new_eth_reserve - as_wei_value(1, 'wei')
 
@@ -218,7 +218,7 @@ def tokenToEthExactPrice(eth_bought: uint256(wei)) -> uint256:
     new_eth_reserve: uint256(wei) = eth_reserve - eth_bought
     new_token_reserve: uint256 = eth_reserve * token_reserve / new_eth_reserve
     tokens_sold: uint256 = new_token_reserve - token_reserve + 1
-    return tokens_sold * 400 / 399 + 1
+    return tokens_sold * 1000 / 997 + 1
 
 @public
 @constant
