@@ -1,5 +1,5 @@
 contract Exchange():
-    def setup(token_addr: address) -> bool: modifying
+    def setup(token_addr: address): modifying
 
 NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
@@ -19,7 +19,7 @@ def createExchange(token: address) -> address:
     assert self.exchangeTemplate != ZERO_ADDRESS
     assert self.token_to_exchange[token] == ZERO_ADDRESS
     exchange: address = create_with_code_of(self.exchangeTemplate)
-    assert Exchange(exchange).setup(token)
+    Exchange(exchange).setup(token)
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token
     log.NewExchange(token, exchange)
