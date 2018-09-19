@@ -26,7 +26,7 @@ $ cd contracts-vyper
 ```
 $ pip3 install --upgrade pip
 $ pip3 install virtualenv
-$ virtualenv env
+$ virtualenv -p python3 env
 $ source env/bin/activate
 ```
 
@@ -44,7 +44,7 @@ $ cd ..
 5) Install other dependencies
 ```
 $ pip install pytest
-$ pip install ethereum
+$ pip install eth-tester[py-evm]==0.1.0b31
 ```
 
 6) Run tests
