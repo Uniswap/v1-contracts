@@ -70,7 +70,7 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
     total_liquidity: uint256 = self.totalSupply
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_amount: uint256(wei) = amount * self.balance / total_liquidity
-    token_amount: uint256 = amount * token_reserve / total_liquidity 
+    token_amount: uint256 = amount * token_reserve / total_liquidity
     assert eth_amount > min_eth and token_amount > min_tokens
     self.liquidity_balances[msg.sender] -= amount
     self.totalSupply = total_liquidity - amount

@@ -18,7 +18,7 @@ def test_swap(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_fa
     assert dai_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToTokenSwap(2*10**18, 1, deadline, dai_token.address, transact={'gas': 117974, 'from': a1})
+    omg_exchange.tokenToTokenSwap(2*10**18, 1, deadline, dai_token.address, transact={'gas': 118074, 'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760548
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
