@@ -10,12 +10,13 @@ def test_swap_default(w3, omg_token, omg_exchange, assert_tx_failed):
     assert omg_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24
     # BUYER converts ETH to UNI
-    w3.eth.sendTransaction({'to': omg_exchange.address, 'gas': 67122, 'value': 1*10**18, 'from': a1})
-    # # Updated balances of UNI exchange
+    # w3.eth.sendTransaction({'to': omg_exchange.address, 'gas': 67122, 'value': 1*10**18, 'from': a1})
+    w3.eth.sendTransaction({'to': omg_exchange.address, 'value': 1*10**18, 'from': a1})
+    # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 6*10**18
-    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521096
+    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521094
     # Updated balances of BUYER
-    assert omg_token.balanceOf(a1) == 1662497915624478904
+    assert omg_token.balanceOf(a1) == 1662497915624478906
     assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
 
 def test_swap(w3, omg_token, omg_exchange, assert_tx_failed):
@@ -30,14 +31,15 @@ def test_swap(w3, omg_token, omg_exchange, assert_tx_failed):
     assert omg_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.ethToTokenSwap(1, deadline, transact={'gas': 66929, 'value': 1*10**18, 'from': a1})
+    # omg_exchange.ethToTokenSwap(1, deadline, transact={'gas': 66929, 'value': 1*10**18, 'from': a1})
+    omg_exchange.ethToTokenSwap(1, deadline, transact={'value': 1*10**18, 'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 6*10**18
-    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521096
-    # Updated balances of BUYER
-    assert omg_token.balanceOf(a1) == 1662497915624478904
+    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521094
+#     # Updated balances of BUYER
+    assert omg_token.balanceOf(a1) == 1662497915624478906
     assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
-
+#
 def test_transfer(w3, omg_token, omg_exchange, assert_tx_failed):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
@@ -53,15 +55,16 @@ def test_transfer(w3, omg_token, omg_exchange, assert_tx_failed):
     assert omg_token.balanceOf(a2) == 0
     assert w3.eth.getBalance(a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.ethToTokenTransfer(1, deadline, a2, transact={'gas': 68397, 'value': 1*10**18, 'from': a1})
+    # omg_exchange.ethToTokenTransfer(1, deadline, a2, transact={'gas': 68397, 'value': 1*10**18, 'from': a1})
+    omg_exchange.ethToTokenTransfer(1, deadline, a2, transact={'value': 1*10**18, 'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 6*10**18
-    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521096
+    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521094
     # Updated balances of BUYER
     assert omg_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
     # Updated balances of RECIPIENT
-    assert omg_token.balanceOf(a2) == 1662497915624478904
+    assert omg_token.balanceOf(a2) == 1662497915624478906
     assert w3.eth.getBalance(a2) == 1*10**24
 
 def test_swap_exact(w3, omg_token, omg_exchange, assert_tx_failed):
@@ -76,13 +79,13 @@ def test_swap_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     assert omg_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.ethToTokenSwapExact(1662497915624478904, deadline, transact={'gas': 76394, 'value': 2*10**18, 'from': a1})
+    omg_exchange.ethToTokenSwapExact(1662497915624478906, deadline, transact={'gas': 76394, 'value': 2*10**18, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(omg_exchange.address) == 6*10**18 - 1
-    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521096
+    assert w3.eth.getBalance(omg_exchange.address) == 6*10**18
+    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521094
     # Updated balances of BUYER
-    assert omg_token.balanceOf(a1) == 1662497915624478904
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18 + 1
+    assert omg_token.balanceOf(a1) == 1662497915624478906
+    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
 
 def test_transfer_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     a0, a1, a2 = w3.eth.accounts[:3]
@@ -99,13 +102,13 @@ def test_transfer_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     assert omg_token.balanceOf(a2) == 0
     assert w3.eth.getBalance(a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.ethToTokenTransferExact(1662497915624478904, deadline, a2, transact={'gas': 77862, 'value': 2*10**18, 'from': a1})
+    omg_exchange.ethToTokenTransferExact(1662497915624478906, deadline, a2, transact={'gas': 77862, 'value': 2*10**18, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(omg_exchange.address) == 6*10**18 - 1
-    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521096
+    assert w3.eth.getBalance(omg_exchange.address) == 6*10**18 
+    assert omg_token.balanceOf(omg_exchange.address) == 8337502084375521094
     # Updated balances of BUYER
     assert omg_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18 + 1
+    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
     # Updated balances of RECIPIENT
-    assert omg_token.balanceOf(a2) == 1662497915624478904
+    assert omg_token.balanceOf(a2) == 1662497915624478906
     assert w3.eth.getBalance(a2) == 1*10**24

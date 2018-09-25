@@ -16,6 +16,10 @@ from web3.contract import ConciseContract, ConciseMethod
 run tests with:             python -m pytest -v
 '''
 
+'''
+useful web3:                w3.eth.getTransactionReceipt(tx_hash)['status']
+'''
+
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 EXCHANGE_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_exchange.vy')).read()
 ERC20_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/ERC20.vy')).read()

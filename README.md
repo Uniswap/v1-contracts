@@ -8,12 +8,10 @@ hayden@uniswap.io
 
 #### Tested in macOS High Sierra
 
-1) Install Python 3 and upgrade pip (requires [Homebrew](https://brew.sh/))
+1) Install Python 3 (requires [Homebrew](https://brew.sh/))
 ```
 $ xcode-select --install (if needed)
 $ brew install python3
-$ brew install pkg-config autoconf automake libyaml
-$ brew install gmp
 ```
 
 2) Clone Uniswap repo
@@ -22,7 +20,7 @@ $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
 ```
 
-3) Setup virtual environment
+3) Update pip and setup virtual environment
 ```
 $ pip3 install --upgrade pip
 $ pip3 install virtualenv
@@ -32,8 +30,6 @@ $ source env/bin/activate
 
 4) [Install Vyper](https://vyper.readthedocs.io/en/latest/installing-vyper.html)
 ```
-$ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
-$ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
 $ git clone https://github.com/ethereum/vyper.git
 $ cd vyper
 $ make
@@ -51,4 +47,12 @@ $ pip install eth-tester[py-evm]==0.1.0b31
 ```
 $ cd tests
 $ pytest -v
+```
+
+6) If you run into issues...
+```
+$ brew install pkg-config autoconf automake libyaml
+$ brew install gmp
+$ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
+$ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
 ```
