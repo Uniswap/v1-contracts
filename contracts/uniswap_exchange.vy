@@ -85,8 +85,9 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
 @constant
 def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
     assert input_reserve > 0 and output_reserve > 0
-    numerator: uint256 = input_amount * output_reserve * 997
-    denominator: uint256 = (input_reserve * 1000) + (input_amount * 997)
+    input_amount_with_fee: uint256 = input_amount * 997
+    numerator: uint256 = input_amount_with_fee * output_reserve
+    denominator: uint256 = (input_reserve * 1000) + input_amount_with_fee
     return numerator / denominator
 
 @private
