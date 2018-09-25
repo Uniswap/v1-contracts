@@ -3,9 +3,12 @@ contract Exchange():
 
 NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
+
 exchangeTemplate: public(address)
+tokenCount: public(uint256)
 token_to_exchange: address[address]
 exchange_to_token: address[address]
+id_to_token: address[uint256]
 
 @public
 def initializeFactory(template: address):
@@ -22,6 +25,9 @@ def createExchange(token: address) -> address:
     Exchange(exchange).setup(token)
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token
+    token_id: uint256 = self.tokenCount + 1
+    self.tokenCount = token_id
+    self.id_to_token[token_id] = token
     log.NewExchange(token, exchange)
     return exchange
 
@@ -34,3 +40,8 @@ def getExchange(token: address) -> address:
 @constant
 def getToken(exchange: address) -> address:
     return self.exchange_to_token[exchange]
+
+@public
+@constant
+def getTokenWithId(token_id: uint256) -> address:
+    return self.id_to_token[token_id]

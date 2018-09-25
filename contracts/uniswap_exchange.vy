@@ -84,6 +84,7 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
 @private
 @constant
 def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
+    assert input_reserve > 0 and output_reserve > 0
     numerator: uint256 = input_amount * output_reserve * 997
     denominator: uint256 = (input_reserve * 1000) + (input_amount * 997)
     return numerator / denominator
@@ -91,13 +92,14 @@ def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve:
 @private
 @constant
 def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
+    assert input_reserve > 0 and output_reserve > 0
     numerator: uint256 = input_reserve * output_amount * 1000
     denominator: uint256 = (output_reserve - output_amount) * 997
     return numerator / denominator + 1
 
 @private
 def ethToToken(eth_sold: uint256(wei), min_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and (eth_sold > 0 and min_tokens > 0)
+    assert deadline >= block.timestamp and (eth_sold > 0 and min_tokens > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
     tokens_bought: uint256 = self.getInputPrice(as_unitless_number(eth_sold), as_unitless_number(self.balance - eth_sold), token_reserve)
     assert tokens_bought > min_tokens
@@ -129,7 +131,7 @@ def ethToTokenTransfer(min_tokens: uint256, deadline: timestamp, recipient: addr
 
 @private
 def ethToTokenExact(tokens_bought: uint256, max_eth: uint256(wei), deadline: timestamp, buyer: address, recipient: address) -> uint256(wei):
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and (tokens_bought > 0 and max_eth > 0)
+    assert deadline >= block.timestamp and (tokens_bought > 0 and max_eth > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_sold: uint256 = self.getOutputPrice(tokens_bought, as_unitless_number(self.balance - max_eth), token_reserve)
     # Throws if eth_sold > max_eth
@@ -157,7 +159,7 @@ def ethToTokenTransferExact(tokens_bought: uint256, deadline: timestamp, recipie
 
 @private
 def tokenToEth(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp, buyer: address, recipient: address) -> uint256(wei):
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and (tokens_sold > 0 and min_eth > 0)
+    assert deadline >= block.timestamp and (tokens_sold > 0 and min_eth > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
     wei_bought: uint256(wei) = as_wei_value(eth_bought, 'wei')
@@ -182,7 +184,7 @@ def tokenToEthTransfer(tokens_sold: uint256, min_eth: uint256(wei), deadline: ti
 
 @private
 def tokenToEthExact(eth_bought: uint256(wei), max_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and eth_bought > 0
+    assert deadline >= block.timestamp and eth_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     tokens_sold: uint256 = self.getOutputPrice(as_unitless_number(eth_bought), token_reserve, as_unitless_number(self.balance))
     assert max_tokens > tokens_sold         # tokens sold is always > 0, so max_tokens > 0
@@ -206,7 +208,7 @@ def tokenToEthTransferExact(eth_bought: uint256(wei), max_tokens: uint256, deadl
 
 @private
 def tokenToToken(tokens_sold: uint256, min_tokens_bought: uint256, min_eth_bought: uint256(wei), deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and (tokens_sold > 0 and min_tokens_bought > 0)
+    assert deadline >= block.timestamp and (tokens_sold > 0 and min_tokens_bought > 0)
     assert exchange_addr != self and exchange_addr != ZERO_ADDRESS
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
@@ -235,7 +237,7 @@ def tokenToTokenTransfer(tokens_sold: uint256, min_tokens_bought: uint256, min_e
 
 @private
 def tokenToTokenExact(tokens_bought: uint256, max_tokens_sold: uint256, min_eth_bought: uint256(wei), deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
-    assert (self.totalSupply > 0 and deadline >= block.timestamp) and (tokens_bought > 0 and min_eth_bought > 0)
+    assert deadline >= block.timestamp and (tokens_bought > 0 and min_eth_bought > 0)
     assert exchange_addr != self and exchange_addr != ZERO_ADDRESS
     eth_bought: uint256(wei) = Exchange(exchange_addr).getEthToTokenExactPrice(tokens_bought)
     token_reserve: uint256 = self.token.balanceOf(self)
