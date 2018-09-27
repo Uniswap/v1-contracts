@@ -1,3 +1,8 @@
+# @title Uniswap Exchange Interface V1
+# @author Hayden Adams (@haydenadams)
+# @notice Source code found at https://github.com/uniswap
+# @notice Use at your own risk
+
 contract Factory():
     def getExchange(token_addr: address) -> address: constant
 
@@ -13,17 +18,17 @@ RemoveLiquidity: event({provider: indexed(address), eth_amount: indexed(uint256(
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
 Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
 
-name: public(bytes32)                                   # Uniswap Exchange
-symbol: public(bytes32)                                 # UNI
-decimals: public(uint256)                               # 18
-totalSupply: public(uint256)                            # total liquidity supply
-liquidity_balances: uint256[address]                    # liquidity balance of an address
-liquidity_allowances: (uint256[address])[address]       # liquidity allowance of one address on another
-token: address(ERC20)                                   # the ERC20 token traded on this exchange
-factory: Factory                                        # interface to factory that created this exchange
+name: public(bytes32)                             # Uniswap Exchange
+symbol: public(bytes32)                           # UNI
+decimals: public(uint256)                         # 18
+totalSupply: public(uint256)                      # total number of liquidity tokens in existence
+balances: uint256[address]                        # liquidity balance of an address
+allowances: (uint256[address])[address]           # liquidity allowance of one address on another
+token: address(ERC20)                             # address of the ERC20 token traded on this exchange
+factory: Factory                                  # interface for the factory that created this exchange
 
-# Called by factory during launch
-# Replaces constructor which is not supported in contracts deployed using create_with_code_of()
+# @dev This function acts as a contract constructor which is not currently supported in contracts deployed
+#      using create_with_code_of(). It is called once by the factory during contract ceation.
 @public
 def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
@@ -33,7 +38,12 @@ def setup(token_addr: address):
     self.symbol = 0x554e490000000000000000000000000000000000000000000000000000000000
     self.decimals = 18
 
-# Add ETH and Tokens (self.token) at current ratio to mint liquidity tokens
+# @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.
+# @dev min_amount has a djfferent meaning when total UNI supply is 0.
+# @param min_amount Minimum number of UNI tokens sender will receive (when UNI supply is not 0).
+# @param min_amount Number of tokens deposited (when total UNI supply is 0).
+# @param deadline Time after which this transaction can no longer be executed.
+# @return The amount of UNI minted.
 @public
 @payable
 def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
@@ -45,7 +55,7 @@ def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
         token_amount: uint256 = msg.value * token_reserve / eth_reserve + 1
         liquidity_minted: uint256 = msg.value * total_liquidity / eth_reserve
         assert liquidity_minted > min_amount
-        self.liquidity_balances[msg.sender] += liquidity_minted
+        self.balances[msg.sender] += liquidity_minted
         self.totalSupply = total_liquidity + liquidity_minted
         assert self.token.transferFrom(msg.sender, self, token_amount)
         log.AddLiquidity(msg.sender, msg.value, token_amount)
@@ -57,13 +67,18 @@ def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
         token_amount: uint256 = min_amount
         initial_liquidity: uint256 = as_unitless_number(self.balance)
         self.totalSupply = initial_liquidity
-        self.liquidity_balances[msg.sender] = initial_liquidity
+        self.balances[msg.sender] = initial_liquidity
         assert self.token.transferFrom(msg.sender, self, token_amount)
         log.AddLiquidity(msg.sender, msg.value, token_amount)
         log.Transfer(ZERO_ADDRESS, msg.sender, initial_liquidity)
         return initial_liquidity
 
-# Burn liquidity tokens to withdraw ETH and Tokens (self.token) at current ratio
+# @dev Burn UNI tokens to withdraw ETH and Tokens at current ratio.
+# @param amount Amount of UNI burned.
+# @param min_eth Minimum ETH withdrawn.
+# @param min_tokens Minimum Tokens withdrawn.
+# @param deadline Time after which this transaction can no longer be executed.
+# @return The amount of ETH and Tokens withdrawn.
 @public
 def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256, deadline: timestamp) -> (uint256(wei), uint256):
     assert (amount > 0 and deadline > block.timestamp) and (min_eth > 0 and min_tokens > 0)
@@ -73,7 +88,7 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
     eth_amount: uint256(wei) = amount * self.balance / total_liquidity
     token_amount: uint256 = amount * token_reserve / total_liquidity
     assert eth_amount > min_eth and token_amount > min_tokens
-    self.liquidity_balances[msg.sender] -= amount
+    self.balances[msg.sender] -= amount
     self.totalSupply = total_liquidity - amount
     assert self.token.transfer(msg.sender, token_amount)
     send(msg.sender, eth_amount)
@@ -81,6 +96,11 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
     log.Transfer(msg.sender, ZERO_ADDRESS, amount)
     return eth_amount, token_amount
 
+# @dev Pricing functon for converting between ETH and Tokens.
+# @param input_amount Amount of ETH or Tokens being sold.
+# @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
+# @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
+# @return Amount of ETH or Tokens purchased.
 @private
 @constant
 def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
@@ -90,6 +110,11 @@ def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve:
     denominator: uint256 = (input_reserve * 1000) + input_amount_with_fee
     return numerator / denominator
 
+# @dev Pricing functon for converting between ETH and Tokens.
+# @param output_amount Amount of ETH or Tokens being purchased.
+# @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
+# @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
+# @return Amount of ETH or Tokens sold.
 @private
 @constant
 def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
@@ -108,22 +133,25 @@ def ethToToken(eth_sold: uint256(wei), min_tokens: uint256, deadline: timestamp,
     log.TokenPurchase(buyer, eth_sold, tokens_bought)
     return tokens_bought
 
-# Fallback function that converts ETH to Tokens
-# User specifies exact input but cannot specify minimum output
+# @notice Convert ETH to Tokens.
+# @dev For default function purchases user specifies input amount but cannot specify
+#      minimum output or transaction deadline.
 @public
 @payable
 def __default__():
     self.ethToToken(msg.value, 1, block.timestamp, msg.sender, msg.sender)
 
-# # Converts ETH to Tokens
-# # User specifies exact input and minimum output
+# @notice Convert ETH to Tokens.
+# @dev User specifies exact input (msg.value) and minimum output.
+# @param min_tokens Minimum Tokens purchased.
+# @param deadline Time after which this transaction can no longer be executed.
 @public
 @payable
 def ethToTokenSwap(min_tokens: uint256, deadline: timestamp) -> uint256:
     return self.ethToToken(msg.value, min_tokens, deadline, msg.sender, msg.sender)
 
-# Converts ETH to Tokens and transfers Tokens to recipient
-# User specifies exact input and minimum output
+# @notice Convert ETH to Tokens and transfers Tokens to recipient.
+# @dev User specifies exact input (msg.value) and minimum output
 @public
 @payable
 def ethToTokenTransfer(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256:
@@ -340,30 +368,30 @@ def factoryAddress() -> address(Factory):
 @public
 @constant
 def balanceOf(_owner : address) -> uint256:
-    return self.liquidity_balances[_owner]
+    return self.balances[_owner]
 
 @public
 def transfer(_to : address, _value : uint256) -> bool:
-    self.liquidity_balances[msg.sender] -= _value
-    self.liquidity_balances[_to] += _value
+    self.balances[msg.sender] -= _value
+    self.balances[_to] += _value
     log.Transfer(msg.sender, _to, _value)
     return True
 
 @public
 def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
-    self.liquidity_balances[_from] -= _value
-    self.liquidity_balances[_to] += _value
-    self.liquidity_allowances[_from][msg.sender] -= _value
+    self.balances[_from] -= _value
+    self.balances[_to] += _value
+    self.allowances[_from][msg.sender] -= _value
     log.Transfer(_from, _to, _value)
     return True
 
 @public
 def approve(_spender : address, _value : uint256) -> bool:
-    self.liquidity_allowances[msg.sender][_spender] = _value
+    self.allowances[msg.sender][_spender] = _value
     log.Approval(msg.sender, _spender, _value)
     return True
 
 @public
 @constant
 def allowance(_owner : address, _spender : address) -> uint256:
-    return self.liquidity_allowances[_owner][_spender]
+    return self.allowances[_owner][_spender]

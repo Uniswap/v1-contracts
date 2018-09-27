@@ -3,7 +3,6 @@ contract Exchange():
 
 NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
-
 exchangeTemplate: public(address)
 tokenCount: public(uint256)
 token_to_exchange: address[address]
