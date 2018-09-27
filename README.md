@@ -40,7 +40,8 @@ $ cd ..
 5) Install other dependencies
 ```
 $ pip install pytest
-$ pip install eth-tester[py-evm]==0.1.0b31
+$ pip install eth-tester[py-evm]==0.1.0b32
+pip install web3==4.4.1
 ```
 
 6) Run tests
