@@ -54,7 +54,7 @@ def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
         token_reserve: uint256 = self.token.balanceOf(self)
         token_amount: uint256 = msg.value * token_reserve / eth_reserve + 1
         liquidity_minted: uint256 = msg.value * total_liquidity / eth_reserve
-        assert liquidity_minted > min_amount
+        assert liquidity_minted >= min_amount
         self.balances[msg.sender] += liquidity_minted
         self.totalSupply = total_liquidity + liquidity_minted
         assert self.token.transferFrom(msg.sender, self, token_amount)
