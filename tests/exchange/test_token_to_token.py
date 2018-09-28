@@ -91,7 +91,7 @@ def test_swap_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert
     assert dai_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToTokenSwapExact(2843678215834080602, 3*10**18, 1, deadline, dai_token.address, transact={'from': a1})
+    omg_exchange.tokenToTokenSwapExact(2843678215834080602, 3*10**18, 2*10**18, deadline, dai_token.address, transact={'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760547
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
@@ -128,7 +128,7 @@ def test_transfer_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, as
     assert w3.eth.getBalance(a2) == 1*10**24
     # BUYER converts ETH to UNI
     # omg_exchange.tokenToTokenTransferExact(2843678215834080602, 3*10**18, 1, deadline, a2, dai_token.address, transact={'gas': 131749,'from': a1})
-    omg_exchange.tokenToTokenTransferExact(2843678215834080602, 3*10**18, 1, deadline, a2, dai_token.address, transact={'from': a1})
+    omg_exchange.tokenToTokenTransferExact(2843678215834080602, 3*10**18, 2*10**18, deadline, a2, dai_token.address, transact={'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760547
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
