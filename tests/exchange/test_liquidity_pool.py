@@ -14,7 +14,7 @@ def test_add_liquidity(w3, omg_token, exchange_factory, omg_exchange, assert_tx_
     # # Throw exception if not enough gas is provided
     # assert_tx_failed(lambda: omg_exchange.addLiquidity(10*10**18, deadline, value=5*10**18, startgas=25000))
     # Liquidity provider (t.a0) adds liquidity
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
     assert omg_exchange.totalSupply() == 5*10**18
@@ -27,7 +27,7 @@ def test_liquidity_pool(w3, omg_token, exchange_factory, omg_exchange, assert_tx
     omg_token.approve(omg_exchange.address, 100*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18 + 1, transact={'from': a1})
     # First liquidity provider (t.a0) adds liquidity
-    omg_exchange.addLiquidity(2*10**18, deadline, transact={'value': 1*10**18})
+    omg_exchange.addLiquidity(1, 2*10**18, deadline, transact={'value': 1*10**18})
     assert omg_exchange.totalSupply() == 1*10**18
     assert omg_exchange.balanceOf(a0) == 1*10**18
     assert omg_exchange.balanceOf(a1) == 0
@@ -37,7 +37,7 @@ def test_liquidity_pool(w3, omg_token, exchange_factory, omg_exchange, assert_tx
     assert w3.eth.getBalance(omg_exchange.address) == 1*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 2*10**18
     # Second liquidity provider (a1) adds liquidity
-    omg_exchange.addLiquidity(1, deadline, transact={'value': 5*10**18, 'from': a1})
+    omg_exchange.addLiquidity(1, 11*10**18, deadline, transact={'value': 5*10**18, 'from': a1})
     assert omg_exchange.totalSupply() == 6*10**18
     assert omg_exchange.balanceOf(a0) == 1*10**18
     assert omg_exchange.balanceOf(a1) == 5*10**18
@@ -68,4 +68,4 @@ def test_liquidity_pool(w3, omg_token, exchange_factory, omg_exchange, assert_tx
     assert w3.eth.getBalance(omg_exchange.address) == 0
     assert omg_token.balanceOf(omg_exchange.address) == 0
     # Can add liquidity again after all liquidity is divested
-    omg_exchange.addLiquidity(2*10**18, deadline, transact={'value': 1*10**18})
+    omg_exchange.addLiquidity(0, 2*10**18, deadline, transact={'value': 1*10**18})

@@ -1,4 +1,4 @@
-# @title Uniswap Exchange Interface V1
+# @title Uniswap Exchange V1
 # @author Hayden Adams (@haydenadams)
 # @notice Source code found at https://github.com/uniswap
 # @notice Use at your own risk
@@ -34,8 +34,8 @@ def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
     self.factory = msg.sender
     self.token = token_addr
-    self.name = 0x556e69737761702045786368616e676500000000000000000000000000000000
-    self.symbol = 0x554e490000000000000000000000000000000000000000000000000000000000
+    self.name = 0x556e697377617020563100000000000000000000000000000000000000000000
+    self.symbol = 0x554e492d56310000000000000000000000000000000000000000000000000000
     self.decimals = 18
 
 # @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.
@@ -46,15 +46,16 @@ def setup(token_addr: address):
 # @return The amount of UNI minted.
 @public
 @payable
-def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
-    assert deadline > block.timestamp and min_amount > 0
+def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
+    assert deadline > block.timestamp and max_tokens > 0
     total_liquidity: uint256 = self.totalSupply
     if total_liquidity > 0:
+        assert min_liquidity > 0
         eth_reserve: uint256(wei) = self.balance - msg.value
         token_reserve: uint256 = self.token.balanceOf(self)
         token_amount: uint256 = msg.value * token_reserve / eth_reserve + 1
         liquidity_minted: uint256 = msg.value * total_liquidity / eth_reserve
-        assert liquidity_minted >= min_amount
+        assert max_tokens >= token_amount and liquidity_minted >= min_liquidity
         self.balances[msg.sender] += liquidity_minted
         self.totalSupply = total_liquidity + liquidity_minted
         assert self.token.transferFrom(msg.sender, self, token_amount)
@@ -64,7 +65,7 @@ def addLiquidity(min_amount: uint256, deadline: timestamp) -> uint256:
     else:
         assert (self.factory != ZERO_ADDRESS and self.token != ZERO_ADDRESS) and msg.value >= 1000000000
         assert self.factory.getExchange(self.token) == self
-        token_amount: uint256 = min_amount
+        token_amount: uint256 = max_tokens
         initial_liquidity: uint256 = as_unitless_number(self.balance)
         self.totalSupply = initial_liquidity
         self.balances[msg.sender] = initial_liquidity
@@ -238,7 +239,7 @@ def tokenToEthTransferExact(eth_bought: uint256(wei), max_tokens: uint256, deadl
 
 @private
 def tokenToToken(tokens_sold: uint256, min_tokens_bought: uint256, min_eth_bought: uint256(wei), deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
-    assert (deadline >= block.timestamp and min_eth_bought > 0) and (tokens_sold > 0 and min_tokens_bought > 0)
+    assert (deadline >= block.timestamp and tokens_sold > 0) and (min_tokens_bought > 0 and min_eth_bought > 0)
     assert exchange_addr != self and exchange_addr != ZERO_ADDRESS
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
@@ -327,6 +328,7 @@ def tokenToExchangeTransferExact(tokens_bought: uint256, max_tokens_sold: uint25
 @public
 @constant
 def getEthToTokenPrice(eth_sold: uint256(wei)) -> uint256:
+    assert eth_sold > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     return self.getInputPrice(as_unitless_number(eth_sold), as_unitless_number(self.balance), token_reserve)
 
@@ -334,6 +336,7 @@ def getEthToTokenPrice(eth_sold: uint256(wei)) -> uint256:
 @public
 @constant
 def getEthToTokenExactPrice(tokens_bought: uint256) -> uint256(wei):
+    assert tokens_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_sold: uint256 = self.getOutputPrice(tokens_bought, as_unitless_number(self.balance), token_reserve)
     return as_wei_value(eth_sold, 'wei')
@@ -342,6 +345,7 @@ def getEthToTokenExactPrice(tokens_bought: uint256) -> uint256(wei):
 @public
 @constant
 def getTokenToEthPrice(tokens_sold: uint256) -> uint256(wei):
+    assert tokens_sold > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
     return as_wei_value(eth_bought, 'wei')
@@ -350,6 +354,7 @@ def getTokenToEthPrice(tokens_sold: uint256) -> uint256(wei):
 @public
 @constant
 def getTokenToEthExactPrice(eth_bought: uint256(wei)) -> uint256:
+    assert eth_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     return self.getOutputPrice(as_unitless_number(eth_bought), token_reserve, as_unitless_number(self.balance))
 

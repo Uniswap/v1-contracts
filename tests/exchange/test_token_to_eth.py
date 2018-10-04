@@ -4,7 +4,7 @@ def test_swap(w3, omg_token, omg_exchange, assert_tx_failed):
     omg_token.transfer(a1, 2*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 2*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -26,7 +26,7 @@ def test_transfer(w3, omg_token, omg_exchange, assert_tx_failed):
     omg_token.transfer(a1, 2*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 2*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -54,7 +54,7 @@ def test_swap_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -67,7 +67,7 @@ def test_swap_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760547
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
     # Updated balances of BUYER
-    assert omg_token.balanceOf(a1) == 1*10**18 
+    assert omg_token.balanceOf(a1) == 1*10**18
     assert w3.eth.getBalance(a1) == 1*10**24 + 831248957812239453
 
 def test_transfer_exact(w3, omg_token, omg_exchange, assert_tx_failed):
@@ -76,7 +76,7 @@ def test_transfer_exact(w3, omg_token, omg_exchange, assert_tx_failed):
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18

@@ -4,9 +4,9 @@ def test_swap(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_fa
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     dai_token.approve(dai_exchange.address, 20*10**18, transact={})
-    dai_exchange.addLiquidity(20*10**18, deadline, transact={'value': 5*10**18})
+    dai_exchange.addLiquidity(0, 20*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -37,9 +37,9 @@ def test_transfer(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_t
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     dai_token.approve(dai_exchange.address, 20*10**18, transact={})
-    dai_exchange.addLiquidity(20*10**18, deadline, transact={'value': 5*10**18})
+    dai_exchange.addLiquidity(0, 20*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -77,9 +77,9 @@ def test_swap_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     dai_token.approve(dai_exchange.address, 20*10**18, transact={})
-    dai_exchange.addLiquidity(20*10**18, deadline, transact={'value': 5*10**18})
+    dai_exchange.addLiquidity(0, 20*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
@@ -109,9 +109,9 @@ def test_transfer_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, as
     omg_token.transfer(a1, 3*10**18, transact={})
     omg_token.approve(omg_exchange.address, 10*10**18, transact={})
     omg_token.approve(omg_exchange.address, 3*10**18, transact={'from': a1})
-    omg_exchange.addLiquidity(10*10**18, deadline, transact={'value': 5*10**18})
+    omg_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
     dai_token.approve(dai_exchange.address, 20*10**18, transact={})
-    dai_exchange.addLiquidity(20*10**18, deadline, transact={'value': 5*10**18})
+    dai_exchange.addLiquidity(0, 20*10**18, deadline, transact={'value': 5*10**18})
     # Starting balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 5*10**18
     assert omg_token.balanceOf(omg_exchange.address) == 10*10**18
