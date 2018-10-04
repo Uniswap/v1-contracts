@@ -1,4 +1,4 @@
-def test_transfer(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
+def test_transfer_input(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     omg_token.transfer(a1, 3*10**18, transact={})
@@ -22,7 +22,7 @@ def test_transfer(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_t
     assert dai_token.balanceOf(a2) == 0
     assert w3.eth.getBalance(a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToExchangeTransfer(2*10**18, 1, 1, deadline, a2, dai_exchange.address, transact={'from': a1})
+    omg_exchange.tokenToExchangeTransferInput(2*10**18, 1, 1, deadline, a2, dai_exchange.address, transact={'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760547
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
@@ -38,7 +38,7 @@ def test_transfer(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_t
     assert dai_token.balanceOf(a2) == 2843678215834080602
     assert w3.eth.getBalance(a2) == 1*10**24
 
-def test_transfer_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
+def test_transfer_output(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     omg_token.transfer(a1, 3*10**18, transact={})
@@ -62,7 +62,7 @@ def test_transfer_exact(w3, omg_token, dai_token, omg_exchange, dai_exchange, as
     assert dai_token.balanceOf(a2) == 0
     assert w3.eth.getBalance(a2) == 1*10**24
     # BUYER converts ETH to UNI
-    omg_exchange.tokenToExchangeTransferExact(2843678215834080602, 3*10**18, 2*10**18, deadline, a2, dai_exchange.address, transact={'from': a1})
+    omg_exchange.tokenToExchangeTransferOutput(2843678215834080602, 3*10**18, 2*10**18, deadline, a2, dai_exchange.address, transact={'from': a1})
     # Updated balances of UNI exchange
     assert w3.eth.getBalance(omg_exchange.address) == 4168751042187760547
     assert omg_token.balanceOf(omg_exchange.address) == 12*10**18
