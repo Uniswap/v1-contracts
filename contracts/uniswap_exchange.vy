@@ -175,7 +175,7 @@ def ethToTokenOutput(tokens_bought: uint256, max_eth: uint256(wei), deadline: ti
         send(buyer, eth_refund)
     assert self.token.transfer(recipient, tokens_bought)
     log.TokenPurchase(buyer, as_wei_value(eth_sold, 'wei'), tokens_bought)
-    return eth_sold
+    return as_wei_value(eth_sold, 'wei')
 
 # @notice Convert ETH to Tokens.
 # @dev User specifies maximum input (msg.value) and exact output.
