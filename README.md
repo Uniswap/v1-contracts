@@ -1,26 +1,19 @@
-## Whitepaper
-https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig?view
-
-## Email
-hayden@uniswap.io
+* Docs: [https://docs.uniswap.io/](https://docs.uniswap.io/)
+* Reddit: [https://www.reddit.com/r/Uniswap/](https://www.reddit.com/r/UniSwap/)
+* Email: [hayden@uniswap.io](mailto:hayden@uniswap.io)
+* Whitepaper: [Link](https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig)
 
 ## Installation:
 
-#### Tested in macOS High Sierra
+#### Requires [Python 3](https://www.python.org/download/releases/3.0/)
 
-1) Install Python 3 (requires [Homebrew](https://brew.sh/))
-```
-$ xcode-select --install (if needed)
-$ brew install python3
-```
-
-2) Clone Uniswap repo
+1) Clone Uniswap
 ```
 $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
 ```
 
-3) Update pip and setup virtual environment
+2) Update pip and setup virtual environment
 ```
 $ pip3 install --upgrade pip
 $ pip3 install virtualenv
@@ -28,30 +21,20 @@ $ virtualenv -p python3 env
 $ source env/bin/activate
 ```
 
-4) [Install Vyper](https://vyper.readthedocs.io/en/latest/installing-vyper.html)
+3) Install dependencies
 ```
-$ git clone https://github.com/ethereum/vyper.git
-$ cd vyper
-$ make
-$ make test
-$ cd ..
+pip install -r requirements.txt
 ```
 
-5) Install other dependencies
-```
-$ pip install pytest
-$ pip install eth-tester[py-evm]==0.1.0b32
-pip install web3==4.4.1
-```
-
-6) Run tests
+4) Run tests
 ```
 $ cd tests
 $ pytest -v
 ```
 
-6) If you run into issues...
+#### If you run into issues try...
 ```
+$ xcode-select --install
 $ brew install pkg-config autoconf automake libyaml
 $ brew install gmp
 $ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
