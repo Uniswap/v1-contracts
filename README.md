@@ -13,9 +13,8 @@ $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
 ```
 
-2) Update pip and setup virtual environment
+2) Setup virtual environment
 ```
-$ pip3 install --upgrade pip
 $ pip3 install virtualenv
 $ virtualenv -p python3 env
 $ source env/bin/activate
