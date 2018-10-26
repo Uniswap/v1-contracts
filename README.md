@@ -28,15 +28,5 @@ pip install -r requirements.txt
 
 4) Run tests
 ```
-$ cd tests
-$ pytest -v
-```
-
-#### If you run into issues try...
-```
-$ xcode-select --install
-$ brew install pkg-config autoconf automake libyaml
-$ brew install gmp
-$ export CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix libyaml)/include"
-$ export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix libyaml)/lib"
+$ pytest -v tests/
 ```
