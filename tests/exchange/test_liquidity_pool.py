@@ -1,4 +1,4 @@
-def test_add_liquidity(w3, omg_token, exchange_factory, omg_exchange, assert_tx_failed):
+def test_add_liquidity(w3, omg_token, exchange_factory, omg_exchange):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     assert exchange_factory.getExchange(omg_token.address) == omg_exchange.address
@@ -20,7 +20,7 @@ def test_add_liquidity(w3, omg_token, exchange_factory, omg_exchange, assert_tx_
     assert omg_exchange.totalSupply() == 5*10**18
     assert omg_exchange.balanceOf(a0) == 5*10**18
 
-def test_liquidity_pool(w3, omg_token, exchange_factory, omg_exchange, assert_tx_failed):
+def test_liquidity_pool(w3, omg_token, exchange_factory, omg_exchange):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     omg_token.transfer(a1, 10*10**18 + 1, transact={})

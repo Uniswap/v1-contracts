@@ -1,4 +1,4 @@
-def test_transfer_input(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
+def test_transfer_input(w3, omg_token, dai_token, omg_exchange, dai_exchange):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     omg_token.transfer(a1, 3*10**18, transact={})
@@ -38,7 +38,7 @@ def test_transfer_input(w3, omg_token, dai_token, omg_exchange, dai_exchange, as
     assert dai_token.balanceOf(a2) == 2843678215834080602
     assert w3.eth.getBalance(a2) == 1*10**24
 
-def test_transfer_output(w3, omg_token, dai_token, omg_exchange, dai_exchange, assert_tx_failed):
+def test_transfer_output(w3, omg_token, dai_token, omg_exchange, dai_exchange):
     a0, a1, a2 = w3.eth.accounts[:3]
     deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
     omg_token.transfer(a1, 3*10**18, transact={})
