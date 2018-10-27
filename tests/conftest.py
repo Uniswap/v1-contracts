@@ -9,15 +9,8 @@ from eth_tester.exceptions import TransactionFailed
 from vyper import compiler
 
 '''
-run tests with:             python -m pytest -v
-
-useful web3:                w3.eth.getTransactionReceipt(tx_hash)['status']
+# run tests with:             python -m pytest -v
 '''
-
-OWN_DIR = os.path.dirname(os.path.realpath(__file__))
-EXCHANGE_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_exchange.vy')).read()
-ERC20_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/ERC20.vy')).read()
-FACTORY_CODE = open(os.path.join(OWN_DIR, os.pardir, 'contracts/uniswap_factory.vy')).read()
 
 setattr(eth_tester.backends.pyevm.main, 'GENESIS_GAS_LIMIT', 10**9)
 setattr(eth_tester.backends.pyevm.main, 'GENESIS_DIFFICULTY', 1)
@@ -51,14 +44,6 @@ def create_contract(w3, path):
     return w3.eth.contract(abi=abi, bytecode=bytecode)
 
 @pytest.fixture
-def exchange_abi():
-    return compiler.mk_full_signature(EXCHANGE_CODE)
-
-@pytest.fixture
-def exchange_bytecode():
-    return '0x' + compiler.compile(EXCHANGE_CODE).hex()
-
-@pytest.fixture
 def exchange_template(w3):
     deploy = create_contract(w3, 'contracts/uniswap_exchange.vy')
     tx_hash = deploy.constructor().transact()
@@ -69,9 +54,9 @@ def exchange_template(w3):
     ))
 
 @pytest.fixture
-def omg_token(w3):
-    deploy = create_contract(w3, 'contracts/ERC20.vy')
-    tx_hash = deploy.constructor(b'OMG Token', b'OMG', 18, 100000*10**18).transact()
+def HAY_token(w3):
+    deploy = create_contract(w3, 'contracts/test_contracts/ERC20.vy')
+    tx_hash = deploy.constructor(b'HAY Token', b'HAY', 18, 100000*10**18).transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     return ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
@@ -79,9 +64,9 @@ def omg_token(w3):
     ))
 
 @pytest.fixture
-def dai_token(w3):
-    deploy = create_contract(w3, 'contracts/ERC20.vy')
-    tx_hash = deploy.constructor(b'DAI Token', b'DAI', 18, 100000*10**18).transact()
+def DEN_token(w3):
+    deploy = create_contract(w3, 'contracts/test_contracts/ERC20.vy')
+    tx_hash = deploy.constructor(b'DEN Token', b'DEN', 18, 100000*10**18).transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     return ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
@@ -101,18 +86,24 @@ def exchange_factory(w3, exchange_template):
     return factory_contract
 
 @pytest.fixture
-def omg_exchange(w3, exchange_abi, exchange_factory, omg_token):
-    exchange_factory.createExchange(omg_token.address, transact={})
-    exchange_address = exchange_factory.getExchange(omg_token.address)
+def exchange_abi():
+    wd = os.path.dirname(os.path.realpath(__file__))
+    code = open(os.path.join(wd, os.pardir, 'contracts/uniswap_exchange.vy')).read()
+    return compiler.mk_full_signature(code)
+
+@pytest.fixture
+def HAY_exchange(w3, exchange_abi, exchange_factory, HAY_token):
+    exchange_factory.createExchange(HAY_token.address, transact={})
+    exchange_address = exchange_factory.getExchange(HAY_token.address)
     return ConciseContract(w3.eth.contract(
         address=exchange_address,
         abi=exchange_abi
     ))
 
 @pytest.fixture
-def dai_exchange(w3, exchange_abi, exchange_factory, dai_token):
-    exchange_factory.createExchange(dai_token.address, transact={})
-    exchange_address = exchange_factory.getExchange(dai_token.address)
+def DEN_exchange(w3, exchange_abi, exchange_factory, DEN_token):
+    exchange_factory.createExchange(DEN_token.address, transact={})
+    exchange_address = exchange_factory.getExchange(DEN_token.address)
     return ConciseContract(w3.eth.contract(
         address=exchange_address,
         abi=exchange_abi
