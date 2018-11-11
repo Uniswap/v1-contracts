@@ -1,5 +1,4 @@
 # @title Uniswap Exchange Interface V1
-# @author Hayden Adams (@haydenadams)
 # @notice Source code found at https://github.com/uniswap
 # @notice Use at your own risk
 
