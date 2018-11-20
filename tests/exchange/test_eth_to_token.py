@@ -1,114 +1,76 @@
-def test_swap_default(w3, HAY_token, HAY_exchange):
-    a0, a1, a2 = w3.eth.accounts[:3]
-    deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
-    HAY_token.approve(HAY_exchange.address, 10*10**18, transact={})
-    HAY_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
-    # # Starting balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 5*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 10*10**18
-    # Starting balances of BUYER
-    assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24
-    # BUYER converts ETH to UNI
-    # w3.eth.sendTransaction({'to': HAY_exchange.address, 'gas': 67122, 'value': 1*10**18, 'from': a1})
-    w3.eth.sendTransaction({'to': HAY_exchange.address, 'value': 1*10**18, 'from': a1})
-    # Updated balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 6*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 8337502084375521094
-    # Updated balances of BUYER
-    assert HAY_token.balanceOf(a1) == 1662497915624478906
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
+from tests.constants import (
+    ETH_RESERVE,
+    HAY_RESERVE,
+    ETH_SOLD,
+    MIN_HAY_BOUGHT,
+    HAY_BOUGHT,
+    MAX_ETH_SOLD,
+    INITIAL_ETH,
+    DEADLINE,
+)
 
-def test_swap_input(w3, HAY_token, HAY_exchange):
+def test_swap_default(w3, HAY_token, HAY_exchange, swap_input):
     a0, a1, a2 = w3.eth.accounts[:3]
-    deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
-    HAY_token.approve(HAY_exchange.address, 10*10**18, transact={})
-    HAY_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
-    # Starting balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 5*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 10*10**18
-    # Starting balances of BUYER
-    assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24
+    HAY_PURCHASED = swap_input(ETH_SOLD, ETH_RESERVE, HAY_RESERVE)
     # BUYER converts ETH to UNI
-    # HAY_exchange.ethToTokenSwap(1, deadline, transact={'gas': 66929, 'value': 1*10**18, 'from': a1})
-    HAY_exchange.ethToTokenSwapInput(1, deadline, transact={'value': 1*10**18, 'from': a1})
+    w3.eth.sendTransaction({'to': HAY_exchange.address, 'value': ETH_SOLD, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 6*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 8337502084375521094
-#     # Updated balances of BUYER
-    assert HAY_token.balanceOf(a1) == 1662497915624478906
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
-#
-def test_transfer_input(w3, HAY_token, HAY_exchange):
+    assert w3.eth.getBalance(HAY_exchange.address) == ETH_RESERVE + ETH_SOLD
+    assert HAY_token.balanceOf(HAY_exchange.address) == HAY_RESERVE - HAY_PURCHASED
+    # Updated balances of BUYER
+    assert HAY_token.balanceOf(a1) == HAY_PURCHASED
+    assert w3.eth.getBalance(a1) == INITIAL_ETH - ETH_SOLD
+
+def test_swap_input(w3, HAY_token, HAY_exchange, swap_input):
     a0, a1, a2 = w3.eth.accounts[:3]
-    deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
-    HAY_token.approve(HAY_exchange.address, 10*10**18, transact={})
-    HAY_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
-    # Starting balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 5*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 10*10**18
-    # Starting balances of BUYER
-    assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24
-    # Starting balances of RECIPIENT
-    assert HAY_token.balanceOf(a2) == 0
-    assert w3.eth.getBalance(a2) == 1*10**24
+    HAY_PURCHASED = swap_input(ETH_SOLD, ETH_RESERVE, HAY_RESERVE)
     # BUYER converts ETH to UNI
-    # HAY_exchange.ethToTokenTransfer(1, deadline, a2, transact={'gas': 68397, 'value': 1*10**18, 'from': a1})
-    HAY_exchange.ethToTokenTransferInput(1, deadline, a2, transact={'value': 1*10**18, 'from': a1})
+    HAY_exchange.ethToTokenSwapInput(MIN_HAY_BOUGHT, DEADLINE, transact={'value': ETH_SOLD, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 6*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 8337502084375521094
+    assert w3.eth.getBalance(HAY_exchange.address) == ETH_RESERVE + ETH_SOLD
+    assert HAY_token.balanceOf(HAY_exchange.address) == HAY_RESERVE - HAY_PURCHASED
+    # Updated balances of BUYER
+    assert HAY_token.balanceOf(a1) == HAY_PURCHASED
+    assert w3.eth.getBalance(a1) == INITIAL_ETH - ETH_SOLD
+
+def test_transfer_input(w3, HAY_token, HAY_exchange, swap_input):
+    a0, a1, a2 = w3.eth.accounts[:3]
+    HAY_PURCHASED = swap_input(ETH_SOLD, ETH_RESERVE, HAY_RESERVE)
+    # BUYER converts ETH to UNI
+    HAY_exchange.ethToTokenTransferInput(MIN_HAY_BOUGHT, DEADLINE, a2, transact={'value': ETH_SOLD, 'from': a1})
+    # Updated balances of UNI exchange
+    assert w3.eth.getBalance(HAY_exchange.address) == ETH_RESERVE + ETH_SOLD
+    assert HAY_token.balanceOf(HAY_exchange.address) == HAY_RESERVE - HAY_PURCHASED
     # Updated balances of BUYER
     assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
+    assert w3.eth.getBalance(a1) == INITIAL_ETH - ETH_SOLD
     # Updated balances of RECIPIENT
-    assert HAY_token.balanceOf(a2) == 1662497915624478906
-    assert w3.eth.getBalance(a2) == 1*10**24
+    assert HAY_token.balanceOf(a2) == HAY_PURCHASED
+    assert w3.eth.getBalance(a2) == INITIAL_ETH
 
-def test_swap_output(w3, HAY_token, HAY_exchange):
+def test_swap_output(w3, HAY_token, HAY_exchange, swap_output):
     a0, a1, a2 = w3.eth.accounts[:3]
-    deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
-    HAY_token.approve(HAY_exchange.address, 10*10**18, transact={})
-    HAY_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
-    # Starting balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 5*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 10*10**18
-    # Starting balances of BUYER
-    assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24
+    ETH_COST = swap_output(HAY_BOUGHT, ETH_RESERVE, HAY_RESERVE)
     # BUYER converts ETH to UNI
-    HAY_exchange.ethToTokenSwapOutput(1662497915624478906, deadline, transact={'gas': 76394, 'value': 2*10**18, 'from': a1})
+    HAY_exchange.ethToTokenSwapOutput(HAY_BOUGHT, DEADLINE, transact={'value': MAX_ETH_SOLD, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 6*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 8337502084375521094
+    assert w3.eth.getBalance(HAY_exchange.address) == ETH_RESERVE + ETH_COST
+    assert HAY_token.balanceOf(HAY_exchange.address) == HAY_RESERVE - HAY_BOUGHT
     # Updated balances of BUYER
-    assert HAY_token.balanceOf(a1) == 1662497915624478906
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
+    assert HAY_token.balanceOf(a1) == HAY_BOUGHT
+    assert w3.eth.getBalance(a1) == INITIAL_ETH - ETH_COST
 
-def test_transfer_output(w3, HAY_token, HAY_exchange):
+def test_transfer_output(w3, HAY_token, HAY_exchange, swap_output):
     a0, a1, a2 = w3.eth.accounts[:3]
-    deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp + 300
-    HAY_token.approve(HAY_exchange.address, 10*10**18, transact={})
-    HAY_exchange.addLiquidity(0, 10*10**18, deadline, transact={'value': 5*10**18})
-    # Starting balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 5*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 10*10**18
-    # Starting balances of BUYER
-    assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24
-    # Starting balances of RECIPIENT
-    assert HAY_token.balanceOf(a2) == 0
-    assert w3.eth.getBalance(a2) == 1*10**24
+    ETH_COST = swap_output(HAY_BOUGHT, ETH_RESERVE, HAY_RESERVE)
     # BUYER converts ETH to UNI
-    HAY_exchange.ethToTokenTransferOutput(1662497915624478906, deadline, a2, transact={'gas': 77862, 'value': 2*10**18, 'from': a1})
+    HAY_exchange.ethToTokenTransferOutput(HAY_BOUGHT, DEADLINE, a2, transact={'value': MAX_ETH_SOLD, 'from': a1})
     # Updated balances of UNI exchange
-    assert w3.eth.getBalance(HAY_exchange.address) == 6*10**18
-    assert HAY_token.balanceOf(HAY_exchange.address) == 8337502084375521094
+    assert w3.eth.getBalance(HAY_exchange.address) == ETH_RESERVE + ETH_COST
+    assert HAY_token.balanceOf(HAY_exchange.address) == HAY_RESERVE - HAY_BOUGHT
     # Updated balances of BUYER
     assert HAY_token.balanceOf(a1) == 0
-    assert w3.eth.getBalance(a1) == 1*10**24 - 1*10**18
+    assert w3.eth.getBalance(a1) == INITIAL_ETH - ETH_COST
     # Updated balances of RECIPIENT
-    assert HAY_token.balanceOf(a2) == 1662497915624478906
-    assert w3.eth.getBalance(a2) == 1*10**24
+    assert HAY_token.balanceOf(a2) == HAY_BOUGHT
+    assert w3.eth.getBalance(a2) == INITIAL_ETH

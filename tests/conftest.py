@@ -8,6 +8,13 @@ from eth_tester import EthereumTester, PyEVMBackend
 from eth_tester.exceptions import TransactionFailed
 from vyper import compiler
 
+from tests.constants import (
+    ETH_RESERVE,
+    HAY_RESERVE,
+    DEN_RESERVE,
+    DEADLINE,
+)
+
 '''
 # run tests with:             python -m pytest -v
 '''
@@ -74,16 +81,16 @@ def DEN_token(w3):
     ))
 
 @pytest.fixture
-def exchange_factory(w3, exchange_template):
+def factory(w3, exchange_template):
     deploy = create_contract(w3, 'contracts/uniswap_factory.vy')
     tx_hash = deploy.constructor().transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
-    factory_contract = ConciseContract(w3.eth.contract(
+    contract = ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
         abi=deploy.abi
     ))
-    factory_contract.initializeFactory(exchange_template.address, transact={})
-    return factory_contract
+    contract.initializeFactory(exchange_template.address, transact={})
+    return contract
 
 @pytest.fixture
 def exchange_abi():
@@ -92,19 +99,43 @@ def exchange_abi():
     return compiler.mk_full_signature(code)
 
 @pytest.fixture
-def HAY_exchange(w3, exchange_abi, exchange_factory, HAY_token):
-    exchange_factory.createExchange(HAY_token.address, transact={})
-    exchange_address = exchange_factory.getExchange(HAY_token.address)
-    return ConciseContract(w3.eth.contract(
+def HAY_exchange(w3, exchange_abi, factory, HAY_token):
+    factory.createExchange(HAY_token.address, transact={})
+    exchange_address = factory.getExchange(HAY_token.address)
+    exchange = ConciseContract(w3.eth.contract(
         address=exchange_address,
         abi=exchange_abi
     ))
+    HAY_token.approve(exchange_address, HAY_RESERVE, transact={})
+    exchange.addLiquidity(0, HAY_RESERVE, DEADLINE, transact={'value': ETH_RESERVE})
+    return exchange
 
 @pytest.fixture
-def DEN_exchange(w3, exchange_abi, exchange_factory, DEN_token):
-    exchange_factory.createExchange(DEN_token.address, transact={})
-    exchange_address = exchange_factory.getExchange(DEN_token.address)
-    return ConciseContract(w3.eth.contract(
+def DEN_exchange(w3, exchange_abi, factory, DEN_token):
+    factory.createExchange(DEN_token.address, transact={})
+    exchange_address = factory.getExchange(DEN_token.address)
+    exchange = ConciseContract(w3.eth.contract(
         address=exchange_address,
         abi=exchange_abi
     ))
+    DEN_token.approve(exchange_address, DEN_RESERVE, transact={})
+    exchange.addLiquidity(0, DEN_RESERVE, DEADLINE, transact={'value': ETH_RESERVE})
+    return exchange
+
+
+@pytest.fixture
+def swap_input():
+    def swap_input(input_amount, input_reserve, output_reserve):
+        input_amount_with_fee = input_amount * 997
+        numerator = input_amount_with_fee * output_reserve
+        denominator = input_reserve * 1000 + input_amount_with_fee
+        return numerator // denominator
+    return swap_input
+
+@pytest.fixture
+def swap_output():
+    def swap_output(output_amount, input_reserve, output_reserve):
+        numerator = input_reserve * output_amount * 1000
+        denominator = (output_reserve - output_amount) * 997
+        return numerator // denominator + 1
+    return swap_output
