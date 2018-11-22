@@ -1,3 +1,4 @@
+ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 # Initial ETH balance of buyer
 INITIAL_ETH = 1*10**24
 # Passing deadline

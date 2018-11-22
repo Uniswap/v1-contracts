@@ -1,5 +1,6 @@
 import os
 import pytest
+from pytest import raises
 
 from web3 import Web3
 from web3.contract import ConciseContract
@@ -139,3 +140,10 @@ def swap_output():
         denominator = (output_reserve - output_amount) * 997
         return numerator // denominator + 1
     return swap_output
+
+@pytest.fixture
+def assert_fail():
+    def assert_fail(func):
+        with raises(Exception):
+            func()
+    return assert_fail
