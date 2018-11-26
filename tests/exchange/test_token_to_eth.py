@@ -21,6 +21,8 @@ def test_swap_input(w3, HAY_token, HAY_exchange, swap_input, assert_fail):
     assert_fail(lambda: HAY_exchange.tokenToEthSwapInput(0, MIN_ETH_BOUGHT, DEADLINE, transact={'from': a1}))
     # min eth == 0
     assert_fail(lambda: HAY_exchange.tokenToEthSwapInput(HAY_SOLD, 0, DEADLINE, transact={'from': a1}))
+    # min eth > eth purchased
+    assert_fail(lambda: HAY_exchange.tokenToEthSwapInput(HAY_SOLD, ETH_PURCHASED + 1, DEADLINE, transact={'from': a1}))
     # deadline < block.timestamp
     assert_fail(lambda: HAY_exchange.tokenToEthSwapInput(HAY_SOLD, MIN_ETH_BOUGHT, 1, transact={'from': a1}))
     # BUYER converts ETH to UNI
@@ -31,8 +33,6 @@ def test_swap_input(w3, HAY_token, HAY_exchange, swap_input, assert_fail):
     # Updated balances of BUYER
     assert HAY_token.balanceOf(a1) == 0
     assert w3.eth.getBalance(a1) == INITIAL_ETH + ETH_PURCHASED
-
-
 
 def test_transfer_input(w3, HAY_token, HAY_exchange, swap_input, assert_fail):
     a0, a1, a2 = w3.eth.accounts[:3]
