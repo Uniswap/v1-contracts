@@ -471,6 +471,7 @@ def balanceOf(_owner : address) -> uint256:
 
 @public
 def transfer(_to : address, _value : uint256) -> bool:
+    assert _to != self
     self.balances[msg.sender] -= _value
     self.balances[_to] += _value
     log.Transfer(msg.sender, _to, _value)
@@ -478,6 +479,7 @@ def transfer(_to : address, _value : uint256) -> bool:
 
 @public
 def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
+    assert _to != self
     self.balances[_from] -= _value
     self.balances[_to] += _value
     self.allowances[_from][msg.sender] -= _value
