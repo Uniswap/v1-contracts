@@ -38,7 +38,7 @@ def setup(token_addr: address):
     self.decimals = 18
 
 # @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.
-# @dev min_amount has a djfferent meaning when total UNI supply is 0.
+# @dev min_amount has a different meaning when total UNI supply is 0.
 # @param min_liquidity Minimum number of UNI sender will mint if total UNI supply is greater than 0.
 # @param min_amount Maximum number of tokens deposited. Deposits max amount if total UNI supply is 0.
 # @param deadline Time after which this transaction can no longer be executed.
