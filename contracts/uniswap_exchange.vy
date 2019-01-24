@@ -96,7 +96,7 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
     log.Transfer(msg.sender, ZERO_ADDRESS, amount)
     return eth_amount, token_amount
 
-# @dev Pricing functon for converting between ETH and Tokens.
+# @dev Pricing function for converting between ETH and Tokens.
 # @param input_amount Amount of ETH or Tokens being sold.
 # @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
 # @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
@@ -110,7 +110,7 @@ def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve:
     denominator: uint256 = (input_reserve * 1000) + input_amount_with_fee
     return numerator / denominator
 
-# @dev Pricing functon for converting between ETH and Tokens.
+# @dev Pricing function for converting between ETH and Tokens.
 # @param output_amount Amount of ETH or Tokens being bought.
 # @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
 # @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
