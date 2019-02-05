@@ -5,9 +5,9 @@ NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
 exchangeTemplate: public(address)
 tokenCount: public(uint256)
-token_to_exchange: address[address]
-exchange_to_token: address[address]
-id_to_token: address[uint256]
+token_to_exchange: map(address, address)
+exchange_to_token: map(address, address)
+id_to_token: map(uint256, address)
 
 @public
 def initializeFactory(template: address):

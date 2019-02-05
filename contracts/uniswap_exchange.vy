@@ -17,14 +17,14 @@ RemoveLiquidity: event({provider: indexed(address), eth_amount: indexed(uint256(
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
 Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
 
-name: public(bytes32)                             # Uniswap V1
-symbol: public(bytes32)                           # UNI-V1
-decimals: public(uint256)                         # 18
-totalSupply: public(uint256)                      # total number of UNI in existence
-balances: uint256[address]                        # UNI balance of an address
-allowances: (uint256[address])[address]           # UNI allowance of one address on another
-token: address(ERC20)                             # address of the ERC20 token traded on this contract
-factory: Factory                                  # interface for the factory that created this contract
+name: public(string[32])                                    # Uniswap V1
+symbol: public(string[32])                                  # UNI-V1
+decimals: public(uint256)                                   # 18
+totalSupply: public(uint256)                                # total number of UNI in existence
+balances: map(address, uint256)                             # UNI balance of an address
+allowances: map(address, map(address, uint256))             # UNI allowance of one address on another
+token: address(ERC20)                                       # address of the ERC20 token traded on this contract
+factory: Factory                                            # interface for the factory that created this contract
 
 # @dev This function acts as a contract constructor which is not currently supported in contracts deployed
 #      using create_with_code_of(). It is called once by the factory during contract creation.
@@ -33,8 +33,8 @@ def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
     self.factory = msg.sender
     self.token = token_addr
-    self.name = 0x556e697377617020563100000000000000000000000000000000000000000000
-    self.symbol = 0x554e492d56310000000000000000000000000000000000000000000000000000
+    self.name = 'Uniswap V1'
+    self.symbol = 'UNI-V1'
     self.decimals = 18
 
 # @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.

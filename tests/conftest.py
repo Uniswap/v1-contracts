@@ -47,8 +47,9 @@ def create_contract(w3, path):
     wd = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(wd, os.pardir, path)) as f:
         source = f.read()
-    bytecode = '0x' + compiler.compile(source).hex()
-    abi = compiler.mk_full_signature(source)
+    out = compiler.compile_code(source, ['abi', 'bytecode'])
+    abi = out['abi']
+    bytecode = out['bytecode']
     return w3.eth.contract(abi=abi, bytecode=bytecode)
 
 @pytest.fixture

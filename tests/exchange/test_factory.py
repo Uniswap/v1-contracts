@@ -24,8 +24,8 @@ def test_factory(w3, exchange_template, HAY_token, factory, pad_bytes32, exchang
     # Can't call setup on exchange
     assert_fail(lambda: HAY_exchange.setup(factory.address))
     # Exchange initial state
-    assert HAY_exchange.name() == pad_bytes32('Uniswap V1')
-    assert HAY_exchange.symbol() == pad_bytes32('UNI-V1')
+    assert HAY_exchange.name() == 'Uniswap V1'
+    assert HAY_exchange.symbol() == 'UNI-V1'
     assert HAY_exchange.decimals() == 18
     assert HAY_exchange.totalSupply() == 0
     assert HAY_exchange.tokenAddress() == HAY_token.address

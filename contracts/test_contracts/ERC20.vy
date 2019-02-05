@@ -8,8 +8,8 @@ Approval: event({_owner: indexed(address), _spender: indexed(address), _value: u
 name: public(bytes32)
 symbol: public(bytes32)
 decimals: public(uint256)
-balances: uint256(wei)[address]
-allowances: (uint256(wei)[address])[address]
+balances: map(address, uint256(wei))
+allowances: map(address, map(address, uint256(wei)))
 total_supply: uint256(wei)
 
 @public
