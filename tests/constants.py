@@ -2,7 +2,7 @@ ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 # Initial ETH balance of buyer
 INITIAL_ETH = 1*10**24
 # Passing deadline
-DEADLINE = 1742680400 # deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp
+DEADLINE = 2559583498 # deadline = w3.eth.getBlock(w3.eth.blockNumber).timestamp
 # INITIAL RESERVE SIZE
 ETH_RESERVE = 5*10**18
 HAY_RESERVE = 10*10**18

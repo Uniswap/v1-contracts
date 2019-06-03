@@ -32,3 +32,9 @@ def test_factory(w3, exchange_template, HAY_token, factory, pad_bytes32, exchang
     assert HAY_exchange.factoryAddress() == factory.address
     assert w3.eth.getBalance(HAY_exchange.address) == 0
     assert HAY_token.balanceOf(HAY_exchange.address) == 0
+    # testing
+    assert HAY_token.balanceOf(a0) == 100000*10**18
+    HAY_token.approve(HAY_exchange.address, 100*10**18, transact={})
+    assert HAY_token.allowance(a0, HAY_exchange.address) == 100*10**18
+    # assert HAY_token.transferFrom(a0, HAY_exchange.address, 5*10**18, transact={})
+    HAY_exchange.addLiquidity(0, 10*10**18, 2559583498, transact={'value': 5*10**18})

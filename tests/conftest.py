@@ -65,7 +65,7 @@ def exchange_template(w3):
 @pytest.fixture
 def HAY_token(w3):
     deploy = create_contract(w3, 'contracts/test_contracts/ERC20.vy')
-    tx_hash = deploy.constructor(b'HAY Token', b'HAY', 18, 100000*10**18).transact()
+    tx_hash = deploy.constructor('HAY Token', 'HAY', 18, 100000*10**18).transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     return ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
@@ -75,7 +75,7 @@ def HAY_token(w3):
 @pytest.fixture
 def DEN_token(w3):
     deploy = create_contract(w3, 'contracts/test_contracts/ERC20.vy')
-    tx_hash = deploy.constructor(b'DEN Token', b'DEN', 18, 100000*10**18).transact()
+    tx_hash = deploy.constructor('DEN Token', 'DEN', 18, 100000*10**18).transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     return ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
@@ -102,6 +102,7 @@ def exchange_abi():
 
 @pytest.fixture
 def HAY_exchange(w3, exchange_abi, factory, HAY_token):
+    a0, a1, a2 = w3.eth.accounts[:3]
     factory.createExchange(HAY_token.address, transact={})
     exchange_address = factory.getExchange(HAY_token.address)
     exchange = ConciseContract(w3.eth.contract(

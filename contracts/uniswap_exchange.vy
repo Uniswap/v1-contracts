@@ -10,6 +10,12 @@ contract Exchange():
     def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256: modifying
     def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipient: address) -> uint256(wei): modifying
 
+contract Token():
+    def balanceOf(_owner : address) -> uint256: constant
+    def transfer(_to : address, _value : uint256) -> bool: modifying
+    def transferFrom(_from : address, _to : address, _value : uint256) -> bool: modifying
+
+
 TokenPurchase: event({buyer: indexed(address), eth_sold: indexed(uint256(wei)), tokens_bought: indexed(uint256)})
 EthPurchase: event({buyer: indexed(address), tokens_sold: indexed(uint256), eth_bought: indexed(uint256(wei))})
 AddLiquidity: event({provider: indexed(address), eth_amount: indexed(uint256(wei)), token_amount: indexed(uint256)})
@@ -23,7 +29,7 @@ decimals: public(uint256)                                   # 18
 totalSupply: public(uint256)                                # total number of UNI in existence
 balances: map(address, uint256)                             # UNI balance of an address
 allowances: map(address, map(address, uint256))             # UNI allowance of one address on another
-token: address(ERC20)                                       # address of the ERC20 token traded on this contract
+token: Token                                                # address of the ERC20 token traded on this contract
 factory: Factory                                            # interface for the factory that created this contract
 
 # @dev This function acts as a contract constructor which is not currently supported in contracts deployed
@@ -31,8 +37,8 @@ factory: Factory                                            # interface for the 
 @public
 def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
-    self.factory = msg.sender
-    self.token = token_addr
+    self.factory = Factory(msg.sender)
+    self.token = Token(token_addr)
     self.name = 'Uniswap V1'
     self.symbol = 'UNI-V1'
     self.decimals = 18
@@ -68,7 +74,7 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
         initial_liquidity: uint256 = as_unitless_number(self.balance)
         self.totalSupply = initial_liquidity
         self.balances[msg.sender] = initial_liquidity
-        assert self.token.transferFrom(msg.sender, self, token_amount)
+        assert self.token.transferFrom(msg.sender, self, token_amount) == True
         log.AddLiquidity(msg.sender, msg.value, token_amount)
         log.Transfer(ZERO_ADDRESS, msg.sender, initial_liquidity)
         return initial_liquidity

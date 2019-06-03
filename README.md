@@ -16,10 +16,9 @@ $ git clone https://github.com/Uniswap/contracts-vyper
 $ cd contracts-vyper
 ```
 
-2) Setup virtual environment
+2) Setup environment
 ```
-$ pip3 install virtualenv
-$ virtualenv -p python3 env
+$ python3 -m venv env
 $ source env/bin/activate
 ```
 
@@ -28,14 +27,7 @@ $ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-4) (Optional) Switch Vyper compiler to version used in Uniswap [verification](https://github.com/runtimeverification/verified-smart-contracts/tree/uniswap/uniswap)  
-```
-cd vyper
-git reset --hard 35038d20bd9946a35261c4c4fbcb27fe61e65f78
-cd ..
-```
-
-5) Run tests
+4) Run tests
 ```
 $ pytest -v tests/
 ```
