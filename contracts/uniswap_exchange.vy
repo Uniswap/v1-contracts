@@ -52,7 +52,7 @@ def setup(token_addr: address):
 @public
 @payable
 def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
-    assert deadline > block.timestamp and (max_tokens > 0 and msg.value > 0)
+    assert deadline >= block.timestamp and (max_tokens > 0 and msg.value > 0)
     total_liquidity: uint256 = self.totalSupply
     if total_liquidity > 0:
         assert min_liquidity > 0
@@ -91,7 +91,7 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
 # @return The amount of ETH and Tokens withdrawn.
 @public
 def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256, deadline: timestamp) -> (uint256(wei), uint256):
-    assert (amount > 0 and deadline > block.timestamp) and (min_eth > 0 and min_tokens > 0)
+    assert (amount > 0 and deadline >= block.timestamp) and (min_eth > 0 and min_tokens > 0)
     total_liquidity: uint256 = self.totalSupply
     assert total_liquidity > 0
     token_reserve: uint256 = self.token.balanceOf(self)
