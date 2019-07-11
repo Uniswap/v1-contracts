@@ -2,6 +2,8 @@
 # @notice Source code found at https://github.com/uniswap
 # @notice Use at your own risk
 
+from vyper.interfaces import ERC20
+
 contract Factory():
     def getExchange(token_addr: address) -> address: constant
 
@@ -9,11 +11,6 @@ contract Exchange():
     def getEthToTokenOutputPrice(tokens_bought: uint256) -> uint256(wei): constant
     def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256: modifying
     def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipient: address) -> uint256(wei): modifying
-
-contract Token():
-    def balanceOf(_owner : address) -> uint256: constant
-    def transfer(_to : address, _value : uint256) -> bool: modifying
-    def transferFrom(_from : address, _to : address, _value : uint256) -> bool: modifying
 
 
 TokenPurchase: event({buyer: indexed(address), eth_sold: indexed(uint256(wei)), tokens_bought: indexed(uint256)})
@@ -29,7 +26,7 @@ decimals: public(uint256)                                   # 18
 totalSupply: public(uint256)                                # total number of UNI in existence
 balanceOf: public(map(address, uint256))                    # UNI balance of an address
 allowance: public(map(address, map(address, uint256)))      # UNI allowance of one address on another
-token: public(Token)                                        # address of the ERC20 token traded on this contract
+token: public(ERC20)                                        # address of the ERC20 token traded on this contract
 factory: public(Factory)                                    # interface for the factory that created this contract
 
 # @dev This function acts as a contract constructor which is not currently supported in contracts deployed
@@ -38,10 +35,22 @@ factory: public(Factory)                                    # interface for the 
 def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
     self.factory = Factory(msg.sender)
-    self.token = Token(token_addr)
+    self.token = ERC20(token_addr)
     self.name = 'Uniswap V2'
     self.symbol = 'UNI-V2'
     self.decimals = 18
+
+# @return Address of Token that is sold on this exchange.
+@public
+@constant
+def tokenAddress() -> address:
+    return self.token
+
+# @return Address of factory that created this exchange.
+@public
+@constant
+def factoryAddress() -> address(Factory):
+    return self.factory
 
 # @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.
 # @dev min_liquidity does nothing when total UNI supply is 0.
@@ -474,37 +483,28 @@ def getTokenToEthOutputPrice(eth_bought: uint256(wei)) -> uint256:
     token_reserve: uint256 = self.token.balanceOf(self)
     return self.getOutputPrice(as_unitless_number(eth_bought), token_reserve, as_unitless_number(self.balance))
 
-# @return Address of Token that is sold on this exchange.
-@public
-@constant
-def tokenAddress() -> address:
-    return self.token
-
-# @return Address of factory that created this exchange.
-@public
-@constant
-def factoryAddress() -> address(Factory):
-    return self.factory
-
 # ERC20 compatibility for exchange liquidity modified from
 # https://github.com/ethereum/vyper/blob/master/examples/tokens/ERC20.vy
 @public
-def transfer(_to : address, _value : uint256) -> bool:
+def transfer(_to: address, _value: uint256) -> bool:
+    assert _value > 0
     self.balanceOf[msg.sender] -= _value
     self.balanceOf[_to] += _value
     log.Transfer(msg.sender, _to, _value)
     return True
 
 @public
-def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
+def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
+    assert _value > 0
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
-    self.allowance[_from][msg.sender] -= _value
+    if _value < MAX_UINT256:
+        self.allowance[_from][msg.sender] -= _value
     log.Transfer(_from, _to, _value)
     return True
 
 @public
-def approve(_spender : address, _value : uint256) -> bool:
+def approve(_spender: address, _value: uint256) -> bool:
     self.allowance[msg.sender][_spender] = _value
     log.Approval(msg.sender, _spender, _value)
     return True
