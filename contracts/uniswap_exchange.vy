@@ -2,8 +2,6 @@
 # @notice Source code found at https://github.com/uniswap
 # @notice Use at your own risk
 
-from vyper.interfaces import ERC20
-
 contract Factory():
     def getExchange(token_addr: address) -> address: constant
 
@@ -11,6 +9,11 @@ contract Exchange():
     def getEthToTokenOutputPrice(tokens_bought: uint256) -> uint256(wei): constant
     def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256: modifying
     def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipient: address) -> uint256(wei): modifying
+
+contract Token():
+    def balanceOf(_owner : address) -> uint256: constant
+    def transfer(_to : address, _value : uint256) -> bool: modifying
+    def transferFrom(_from : address, _to : address, _value : uint256) -> bool: modifying
 
 
 TokenPurchase: event({buyer: indexed(address), eth_sold: indexed(uint256(wei)), tokens_bought: indexed(uint256)})
@@ -26,7 +29,7 @@ decimals: public(uint256)                                   # 18
 totalSupply: public(uint256)                                # total number of UNI in existence
 balanceOf: public(map(address, uint256))                    # UNI balance of an address
 allowance: public(map(address, map(address, uint256)))      # UNI allowance of one address on another
-token: public(ERC20)                                        # address of the ERC20 token traded on this contract
+token: public(Token)                                        # address of the ERC20 token traded on this contract
 factory: public(Factory)                                    # interface for the factory that created this contract
 
 # @dev This function acts as a contract constructor which is not currently supported in contracts deployed
@@ -35,7 +38,7 @@ factory: public(Factory)                                    # interface for the 
 def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
     self.factory = Factory(msg.sender)
-    self.token = ERC20(token_addr)
+    self.token = Token(token_addr)
     self.name = 'Uniswap V2'
     self.symbol = 'UNI-V2'
     self.decimals = 18
