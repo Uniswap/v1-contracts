@@ -1,4 +1,4 @@
-def test_ERC20(w3, HAY_token, pad_bytes32):
+def test_ERC20(w3, HAY_token):
     a0, a1 = w3.eth.accounts[:2]
     assert HAY_token.name() == 'HAY Token'
     assert HAY_token.symbol() == 'HAY'

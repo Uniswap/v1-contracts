@@ -52,7 +52,7 @@ def tokenAddress() -> address:
 # @return Address of factory that created this exchange.
 @public
 @constant
-def factoryAddress() -> address(Factory):
+def factoryAddress() -> address:
     return self.factory
 
 # @notice Deposit ETH and Tokens (self.token) at current ratio to mint UNI tokens.
@@ -64,6 +64,7 @@ def factoryAddress() -> address(Factory):
 @public
 @payable
 def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
+    # TODO: improve safety checks
     assert deadline >= block.timestamp and (max_tokens > 0 and msg.value > 0)
     total_liquidity: uint256 = self.totalSupply
     if total_liquidity > 0:
@@ -77,11 +78,11 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
         self.totalSupply = total_liquidity + liquidity_minted
         success: bool = self.token.transferFrom(msg.sender, self, token_amount)
         assert success
-        # assert self.token.transferFrom(msg.sender, self, token_amount)
         log.AddLiquidity(msg.sender, msg.value, token_amount)
         log.Transfer(ZERO_ADDRESS, msg.sender, liquidity_minted)
         return liquidity_minted
     else:
+        # TODO: figure out initial pool token balance
         assert (self.factory != ZERO_ADDRESS and self.token != ZERO_ADDRESS) and msg.value >= 1000000000
         assert self.factory.getExchange(self.token) == self
         token_amount: uint256 = max_tokens
@@ -90,7 +91,6 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
         self.balanceOf[msg.sender] = initial_liquidity
         success: bool = self.token.transferFrom(msg.sender, self, token_amount)
         assert success
-        # assert self.token.transferFrom(msg.sender, self, token_amount)
         log.AddLiquidity(msg.sender, msg.value, token_amount)
         log.Transfer(ZERO_ADDRESS, msg.sender, initial_liquidity)
         return initial_liquidity
@@ -115,7 +115,6 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
     send(msg.sender, eth_amount)
     success: bool = self.token.transfer(msg.sender, token_amount)
     assert success
-    # assert self.token.transfer(msg.sender, token_amount)
     log.RemoveLiquidity(msg.sender, eth_amount, token_amount)
     log.Transfer(msg.sender, ZERO_ADDRESS, amount)
     return eth_amount, token_amount
@@ -155,7 +154,6 @@ def ethToTokenInput(eth_sold: uint256(wei), min_tokens: uint256, deadline: times
     assert tokens_bought >= min_tokens
     success: bool = self.token.transfer(recipient, tokens_bought)
     assert success
-    # assert self.token.transfer(recipient, tokens_bought)
     log.TokenPurchase(buyer, eth_sold, tokens_bought)
     return tokens_bought
 
@@ -200,7 +198,6 @@ def ethToTokenOutput(tokens_bought: uint256, max_eth: uint256(wei), deadline: ti
         send(buyer, eth_refund)
     success: bool = self.token.transfer(recipient, tokens_bought)
     assert success
-    # assert self.token.transfer(recipient, tokens_bought)
     log.TokenPurchase(buyer, as_wei_value(eth_sold, 'wei'), tokens_bought)
     return as_wei_value(eth_sold, 'wei')
 
@@ -236,7 +233,6 @@ def tokenToEthInput(tokens_sold: uint256, min_eth: uint256(wei), deadline: times
     send(recipient, wei_bought)
     success: bool = self.token.transferFrom(buyer, self, tokens_sold)
     assert success
-    # assert self.token.transferFrom(buyer, self, tokens_sold)
     log.EthPurchase(buyer, tokens_sold, wei_bought)
     return wei_bought
 
@@ -353,7 +349,6 @@ def tokenToTokenOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_eth
     assert max_tokens_sold >= tokens_sold and max_eth_sold >= eth_bought
     success: bool = self.token.transferFrom(buyer, self, tokens_sold)
     assert success
-    # assert self.token.transferFrom(buyer, self, tokens_sold)
     eth_sold: uint256(wei) = Exchange(exchange_addr).ethToTokenTransferOutput(tokens_bought, deadline, recipient, value=eth_bought)
     log.EthPurchase(buyer, tokens_sold, eth_bought)
     return tokens_sold

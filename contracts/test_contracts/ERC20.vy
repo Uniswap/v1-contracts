@@ -10,13 +10,7 @@ symbol: public(string[32])
 decimals: public(uint256)
 totalSupply: public(uint256)
 balanceOf: public(map(address, uint256))
-allowances: map(address, map(address, uint256))
-
-
-@public
-@constant
-def allowance(_owner : address, _spender : address) -> uint256:
-    return self.allowances[_owner][_spender]
+allowance: public(map(address, map(address, uint256)))
 
 
 @public
@@ -41,14 +35,14 @@ def transfer(_to : address, _value : uint256) -> bool:
 def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
-    if self.allowances[_from][msg.sender] < MAX_UINT256:
-        self.allowances[_from][msg.sender] -= _value
+    if self.allowance[_from][msg.sender] < MAX_UINT256:
+        self.allowance[_from][msg.sender] -= _value
     log.Transfer(_from, _to, _value)
     return True
 
 
 @public
 def approve(_spender : address, _value : uint256) -> bool:
-    self.allowances[msg.sender][_spender] = _value
+    self.allowance[msg.sender][_spender] = _value
     log.Approval(msg.sender, _spender, _value)
     return True

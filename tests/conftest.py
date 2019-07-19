@@ -85,13 +85,12 @@ def DEN_token(w3):
 @pytest.fixture
 def factory(w3, exchange_template):
     deploy = create_contract(w3, 'contracts/uniswap_factory.vy')
-    tx_hash = deploy.constructor().transact()
+    tx_hash = deploy.constructor(exchange_template.address).transact()
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     contract = ConciseContract(w3.eth.contract(
         address=tx_receipt.contractAddress,
         abi=deploy.abi
     ))
-    contract.initializeFactory(exchange_template.address, transact={})
     return contract
 
 @pytest.fixture
@@ -146,6 +145,6 @@ def swap_output():
 @pytest.fixture
 def assert_fail():
     def assert_fail(func):
-        with raises(Exception):
+        with raises(TransactionFailed):
             func()
     return assert_fail

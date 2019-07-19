@@ -10,15 +10,13 @@ getToken: public(map(address, address))
 getTokenWithId: public(map(uint256, address))
 
 @public
-def initializeFactory(template: address):
-    assert self.exchangeTemplate == ZERO_ADDRESS
+def __init__(template: address):
     assert template != ZERO_ADDRESS
     self.exchangeTemplate = template
 
 @public
 def createExchange(token: address) -> address:
     assert token != ZERO_ADDRESS
-    assert self.exchangeTemplate != ZERO_ADDRESS
     assert self.getExchange[token] == ZERO_ADDRESS
     exchange: address = create_forwarder_to(self.exchangeTemplate)
     Exchange(exchange).setup(token)

@@ -1,12 +1,7 @@
-from pytest import raises
 from web3.contract import ConciseContract
-from eth_tester.exceptions import TransactionFailed
 
-def test_factory(w3, exchange_template, HAY_token, factory, pad_bytes32, exchange_abi, assert_fail):
+def test_factory(w3, exchange_template, HAY_token, factory, exchange_abi, assert_fail):
     a0, a1 = w3.eth.accounts[:2]
-    # Can't call initializeFactory on factory twice
-    with raises(TransactionFailed):
-        factory.initializeFactory(HAY_token.address)
     # Factory initial state
     assert factory.exchangeTemplate() == exchange_template.address
     assert factory.getExchange(HAY_token.address) == None
@@ -19,8 +14,7 @@ def test_factory(w3, exchange_template, HAY_token, factory, pad_bytes32, exchang
     assert factory.tokenCount() == 1
     assert factory.getTokenWithId(1) == HAY_token.address
     # Exchange already exists
-    with raises(TransactionFailed):
-        factory.createExchange(HAY_token.address)
+    assert_fail(lambda: factory.createExchange(HAY_token.address))
     # Can't call setup on exchange
     assert_fail(lambda: HAY_exchange.setup(factory.address))
     # Exchange initial state
