@@ -63,6 +63,7 @@ def factoryAddress() -> address:
 # @return The amount of UNI minted.
 @public
 @payable
+@nonreentrant('lock')
 def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
     # TODO: improve safety checks
     assert deadline >= block.timestamp and (max_tokens > 0 and msg.value > 0)
@@ -102,6 +103,7 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
 # @param deadline Time after which this transaction can no longer be executed.
 # @return The amount of ETH and Tokens withdrawn.
 @public
+@nonreentrant('lock')
 def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256, deadline: timestamp) -> (uint256(wei), uint256):
     assert (amount > 0 and deadline >= block.timestamp) and (min_eth > 0 and min_tokens > 0)
     total_liquidity: uint256 = self.totalSupply
@@ -147,6 +149,7 @@ def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserv
     return numerator / denominator + 1
 
 @private
+@nonreentrant('lock')
 def ethToTokenInput(eth_sold: uint256(wei), min_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and (eth_sold > 0 and min_tokens > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -188,6 +191,7 @@ def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient:
     return self.ethToTokenInput(msg.value, min_tokens, deadline, msg.sender, recipient)
 
 @private
+@nonreentrant('lock')
 def ethToTokenOutput(tokens_bought: uint256, max_eth: uint256(wei), deadline: timestamp, buyer: address, recipient: address) -> uint256(wei):
     assert deadline >= block.timestamp and (tokens_bought > 0 and max_eth > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -224,6 +228,7 @@ def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipi
     return self.ethToTokenOutput(tokens_bought, msg.value, deadline, msg.sender, recipient)
 
 @private
+@nonreentrant('lock')
 def tokenToEthInput(tokens_sold: uint256, min_eth: uint256(wei), deadline: timestamp, buyer: address, recipient: address) -> uint256(wei):
     assert deadline >= block.timestamp and (tokens_sold > 0 and min_eth > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -260,6 +265,7 @@ def tokenToEthTransferInput(tokens_sold: uint256, min_eth: uint256(wei), deadlin
     return self.tokenToEthInput(tokens_sold, min_eth, deadline, msg.sender, recipient)
 
 @private
+@nonreentrant('lock')
 def tokenToEthOutput(eth_bought: uint256(wei), max_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and eth_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
@@ -296,6 +302,7 @@ def tokenToEthTransferOutput(eth_bought: uint256(wei), max_tokens: uint256, dead
     return self.tokenToEthOutput(eth_bought, max_tokens, deadline, msg.sender, recipient)
 
 @private
+@nonreentrant('lock')
 def tokenToTokenInput(tokens_sold: uint256, min_tokens_bought: uint256, min_eth_bought: uint256(wei), deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
     assert (deadline >= block.timestamp and tokens_sold > 0) and (min_tokens_bought > 0 and min_eth_bought > 0)
     assert exchange_addr != self and exchange_addr != ZERO_ADDRESS
@@ -339,6 +346,7 @@ def tokenToTokenTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, 
     return self.tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, msg.sender, recipient, exchange_addr)
 
 @private
+@nonreentrant('lock')
 def tokenToTokenOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_eth_sold: uint256(wei), deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
     assert deadline >= block.timestamp and (tokens_bought > 0 and max_eth_sold > 0)
     assert exchange_addr != self and exchange_addr != ZERO_ADDRESS
