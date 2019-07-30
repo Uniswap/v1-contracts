@@ -493,7 +493,6 @@ def getTokenToEthOutputPrice(eth_bought: uint256(wei)) -> uint256:
 # https://github.com/ethereum/vyper/blob/master/examples/tokens/ERC20.vy
 @public
 def transfer(_to: address, _value: uint256) -> bool:
-    assert _value > 0
     self.balanceOf[msg.sender] -= _value
     self.balanceOf[_to] += _value
     log.Transfer(msg.sender, _to, _value)
@@ -501,7 +500,6 @@ def transfer(_to: address, _value: uint256) -> bool:
 
 @public
 def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
-    assert _value > 0
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
     if _value < MAX_UINT256:
