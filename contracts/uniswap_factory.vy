@@ -5,9 +5,9 @@ NewExchange: event({token: indexed(address), exchange: indexed(address)})
 
 exchangeTemplate: public(address)
 tokenCount: public(uint256)
-token_to_exchange: address[address]
-exchange_to_token: address[address]
-id_to_token: address[uint256]
+token_to_exchange: map(address, address)
+exchange_to_token: map(address, address)
+id_to_token: map(uint256, address)
 
 @public
 def initializeFactory(template: address):
@@ -20,7 +20,7 @@ def createExchange(token: address) -> address:
     assert token != ZERO_ADDRESS
     assert self.exchangeTemplate != ZERO_ADDRESS
     assert self.token_to_exchange[token] == ZERO_ADDRESS
-    exchange: address = create_with_code_of(self.exchangeTemplate)
+    exchange: address = create_forwarder_to(self.exchangeTemplate)
     Exchange(exchange).setup(token)
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token
